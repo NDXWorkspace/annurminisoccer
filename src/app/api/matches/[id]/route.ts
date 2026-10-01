@@ -1,0 +1,180 @@
+import { NextResponse } from 'next/server';
+import { supabase, getServiceSupabase, isSupabaseConfigured, isServiceRoleConfigured, SUPABASE_MISCONFIGURED_MESSAGE, SUPABASE_MISSING_SERVICE_KEY_MESSAGE } from '@/lib/supabase';
+import { getSessionFromCookies } from '@/lib/auth';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+const TIME_RE = /^\d{2}:\d{2}(:\d{2})?$/;
+const STATUSES = ['scheduled', 'live', 'halftime', 'finished'] as const;
+const STAGES = ['grup', 'semifinal', 'final'] as const;
+
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  if (!isSupabaseConfigured()) {
+    return NextResponse.json(
+      { success: false, error: SUPABASE_MISCONFIGURED_MESSAGE },
+      { status: 503 }
+    );
+  }
+
+  try {
+    const { id } = await params;
+
+    if (!UUID_RE.test(id)) {
+      return NextResponse.json({ success: false, error: 'ID pertandingan tidak valid.' }, { status: 400 });
+    }
+
+    const { data, error } = await supabase
+      .from('matches')
+      .select('*, team_a:teams!team_a_id(*), team_b:teams!team_b_id(*)')
+      .eq('id', id)
+      .single();
+       
+    if (error) {
+      if ((error as { code?: string }).code === 'PGRST116') {
+        return NextResponse.json({ success: false, error: 'Pertandingan tidak ditemukan.' }, { status: 404 });
+      }
+      throw error;
+    }
+    if (!data) return NextResponse.json({ success: false, error: 'Tidak ditemukan' }, { status: 404 });
+    
+    return NextResponse.json({ success: true, data });
+  } catch (error: unknown) {
+    console.error('Fetch match error:', error);
+    return NextResponse.json({ success: false, error: (error as Error).message || 'Terjadi kesalahan' }, { status: 500 });
+  }
+}
+
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params;
+    const isAdmin = await getSessionFromCookies();
+    if (!isAdmin) {
+      return NextResponse.json({ success: false, error: 'Sesi berakhir, masuk kembali.' }, { status: 401 });
+    }
+
+    if (!UUID_RE.test(id)) {
+      return NextResponse.json({ success: false, error: 'ID pertandingan tidak valid.' }, { status: 400 });
+    }
+
+    if (!isServiceRoleConfigured()) {
+      return NextResponse.json({ success: false, error: SUPABASE_MISSING_SERVICE_KEY_MESSAGE }, { status: 503 });
+    }
+
+    const body = await request.json();
+    const update: Record<string, string | number | null> = {};
+
+    if (body?.team_a_id !== undefined) {
+      if (typeof body.team_a_id !== 'string' || !UUID_RE.test(body.team_a_id)) {
+        return NextResponse.json({ success: false, error: 'ID tim tidak valid.' }, { status: 400 });
+      }
+      update.team_a_id = body.team_a_id;
+    }
+    if (body?.team_b_id !== undefined) {
+      if (typeof body.team_b_id !== 'string' || !UUID_RE.test(body.team_b_id)) {
+        return NextResponse.json({ success: false, error: 'ID tim tidak valid.' }, { status: 400 });
+      }
+      update.team_b_id = body.team_b_id;
+    }
+    if (update.team_a_id && update.team_b_id && update.team_a_id === update.team_b_id) {
+      return NextResponse.json({ success: false, error: 'Tim A dan Tim B tidak boleh sama' }, { status: 400 });
+    }
+    if (body?.match_date !== undefined) {
+      const v = typeof body.match_date === 'string' ? body.match_date.trim() : '';
+      if (!ISO_DATE.test(v)) {
+        return NextResponse.json({ success: false, error: 'Format tanggal tidak valid. Gunakan YYYY-MM-DD.' }, { status: 400 });
+      }
+      update.match_date = v;
+    }
+    if (body?.kickoff_time !== undefined) {
+      const v = typeof body.kickoff_time === 'string' ? body.kickoff_time.trim() : '';
+      if (!TIME_RE.test(v)) {
+        return NextResponse.json({ success: false, error: 'Format jam tidak valid. Gunakan HH:MM.' }, { status: 400 });
+      }
+      update.kickoff_time = v;
+    }
+    if (body?.field !== undefined) {
+      const v = typeof body.field === 'string' ? body.field.trim() : '';
+      if (!v) return NextResponse.json({ success: false, error: 'Lapangan wajib diisi.' }, { status: 400 });
+      update.field = v;
+    }
+    if (body?.status !== undefined) {
+      if (!STATUSES.includes(body.status)) {
+        return NextResponse.json({ success: false, error: 'Status tidak valid.' }, { status: 400 });
+      }
+      update.status = body.status;
+    }
+    if (body?.stage !== undefined) {
+      if (!STAGES.includes(body.stage)) {
+        return NextResponse.json({ success: false, error: 'Fase tidak valid.' }, { status: 400 });
+      }
+      update.stage = body.stage;
+    }
+    if (body?.group_name !== undefined) {
+      update.group_name =
+        typeof body.group_name === 'string' && body.group_name.trim() ? body.group_name.trim() : null;
+    }
+    if (body?.score_a !== undefined || body?.score_b !== undefined) {
+      for (const k of ['score_a', 'score_b'] as const) {
+        if (body?.[k] !== undefined) {
+          if (!Number.isInteger(body[k]) || body[k] < 0 || body[k] > 99) {
+            return NextResponse.json({ success: false, error: 'Skor harus bilangan bulat 0–99.' }, { status: 400 });
+          }
+          update[k] = body[k];
+        }
+      }
+    }
+
+    if (Object.keys(update).length === 0) {
+      return NextResponse.json({ success: false, error: 'Tidak ada perubahan untuk disimpan.' }, { status: 400 });
+    }
+
+    const adminSupabase = getServiceSupabase();
+    const { data, error } = await adminSupabase
+      .from('matches')
+      .update(update)
+      .eq('id', id)
+      .select('*, team_a:teams!team_a_id(*), team_b:teams!team_b_id(*)')
+      .single();
+
+    if (error) throw error;
+
+    return NextResponse.json({ success: true, data });
+  } catch (error: unknown) {
+    console.error('Update match error:', error);
+    return NextResponse.json({ success: false, error: (error as Error).message || 'Terjadi kesalahan' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params;
+    const isAdmin = await getSessionFromCookies();
+    if (!isAdmin) {
+      return NextResponse.json({ success: false, error: 'Sesi berakhir, masuk kembali.' }, { status: 401 });
+    }
+
+    if (!UUID_RE.test(id)) {
+      return NextResponse.json({ success: false, error: 'ID pertandingan tidak valid.' }, { status: 400 });
+    }
+
+    if (!isServiceRoleConfigured()) {
+      return NextResponse.json({ success: false, error: SUPABASE_MISSING_SERVICE_KEY_MESSAGE }, { status: 503 });
+    }
+
+    const adminSupabase = getServiceSupabase();
+    const { error } = await adminSupabase
+      .from('matches')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+
+    return NextResponse.json({ success: true, data: null });
+  } catch (error: unknown) {
+    console.error('Delete match error:', error);
+    return NextResponse.json({ success: false, error: (error as Error).message || 'Terjadi kesalahan' }, { status: 500 });
+  }
+}

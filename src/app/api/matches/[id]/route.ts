@@ -109,6 +109,26 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       if (!STATUSES.includes(body.status)) {
         return NextResponse.json({ success: false, error: 'Status tidak valid.' }, { status: 400 });
       }
+      // Validasi transisi: finished tidak bisa diubah kembali, scheduled harus lewat live.
+      const { data: current } = await getServiceSupabase()
+        .from('matches')
+        .select('status')
+        .eq('id', id)
+        .single();
+      if (current) {
+        const allowed: Record<string, string[]> = {
+          scheduled: ['live'],
+          live: ['halftime', 'finished'],
+          halftime: ['live', 'finished'],
+          finished: [],
+        };
+        if (!(allowed[current.status] ?? []).includes(body.status) && current.status !== body.status) {
+          return NextResponse.json(
+            { success: false, error: `Tidak bisa mengubah status dari "${current.status}" ke "${body.status}".` },
+            { status: 400 }
+          );
+        }
+      }
       update.status = body.status;
     }
     if (body?.stage !== undefined) {

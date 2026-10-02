@@ -60,7 +60,7 @@ export async function POST(request: Request) {
     cookieStore.set(COOKIE_NAME, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'strict',
       path: '/',
       maxAge: SESSION_DURATION,
     });

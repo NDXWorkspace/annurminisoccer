@@ -86,7 +86,7 @@ export async function deleteUser(id: string) {
 
 /** Tulis satu baris audit. Gagal audit tidak boleh membatalkan operasi. */
 export async function audit(
-  actor: { id?: string; username?: string } | null,
+  actor: { id?: string; sub?: string; username?: string } | null,
   action: string,
   target?: string,
   payload?: Record<string, unknown>
@@ -94,7 +94,7 @@ export async function audit(
   try {
     const sb = getServiceSupabase();
     await sb.from('audit_log').insert({
-      user_id: actor?.id ?? null,
+      user_id: actor?.sub ?? actor?.id ?? null,
       username: actor?.username ?? null,
       action,
       target: target ?? null,

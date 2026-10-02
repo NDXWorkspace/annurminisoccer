@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { supabase, getServiceSupabase, isSupabaseConfigured, isServiceRoleConfigured, SUPABASE_MISCONFIGURED_MESSAGE, SUPABASE_MISSING_SERVICE_KEY_MESSAGE } from '@/lib/supabase';
-import { getSessionFromCookies } from '@/lib/auth';
+import { getSession } from '@/lib/auth';
+import { audit } from '@/lib/admin-users';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -50,10 +51,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const isAdmin = await getSessionFromCookies();
-    if (!isAdmin) {
+    const session = await getSession();
+    if (!session) {
       return NextResponse.json({ success: false, error: 'Sesi berakhir, masuk kembali.' }, { status: 401 });
     }
+    await audit(session, 'update_match', 'matches');
 
     if (!UUID_RE.test(id)) {
       return NextResponse.json({ success: false, error: 'ID pertandingan tidak valid.' }, { status: 400 });
@@ -120,7 +122,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       for (const k of ['score_a', 'score_b'] as const) {
         if (body?.[k] !== undefined) {
           if (!Number.isInteger(body[k]) || body[k] < 0 || body[k] > 99) {
-            return NextResponse.json({ success: false, error: 'Skor harus bilangan bulat 0–99.' }, { status: 400 });
+            return NextResponse.json({ success: false, error: 'Skor harus bilangan bulat 0â€“99.' }, { status: 400 });
           }
           update[k] = body[k];
         }
@@ -151,10 +153,11 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const isAdmin = await getSessionFromCookies();
-    if (!isAdmin) {
+    const session = await getSession();
+    if (!session) {
       return NextResponse.json({ success: false, error: 'Sesi berakhir, masuk kembali.' }, { status: 401 });
     }
+    await audit(session, 'update_match', 'matches');
 
     if (!UUID_RE.test(id)) {
       return NextResponse.json({ success: false, error: 'ID pertandingan tidak valid.' }, { status: 400 });

@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { getServiceSupabase, isServiceRoleConfigured, SUPABASE_MISSING_SERVICE_KEY_MESSAGE } from '@/lib/supabase';
-import { getSessionFromCookies } from '@/lib/auth';
+import { getSession } from '@/lib/auth';
+import { audit } from '@/lib/admin-users';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -8,10 +9,11 @@ export const revalidate = 0;
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const isAdmin = await getSessionFromCookies();
-    if (!isAdmin) {
+    const session = await getSession();
+    if (!session) {
       return NextResponse.json({ success: false, error: 'Sesi berakhir, masuk kembali.' }, { status: 401 });
     }
+    await audit(session, 'update_score', 'matches');
 
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
       return NextResponse.json({ success: false, error: 'ID pertandingan tidak valid.' }, { status: 400 });
@@ -26,13 +28,13 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     if (body?.score_a !== undefined) {
       if (!Number.isInteger(body.score_a) || body.score_a < 0 || body.score_a > 99) {
-        return NextResponse.json({ success: false, error: 'Skor harus bilangan bulat 0–99.' }, { status: 400 });
+        return NextResponse.json({ success: false, error: 'Skor harus bilangan bulat 0â€“99.' }, { status: 400 });
       }
       updateData.score_a = body.score_a;
     }
     if (body?.score_b !== undefined) {
       if (!Number.isInteger(body.score_b) || body.score_b < 0 || body.score_b > 99) {
-        return NextResponse.json({ success: false, error: 'Skor harus bilangan bulat 0–99.' }, { status: 400 });
+        return NextResponse.json({ success: false, error: 'Skor harus bilangan bulat 0â€“99.' }, { status: 400 });
       }
       updateData.score_b = body.score_b;
     }

@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import {
   supabase,
   getServiceSupabase,
@@ -7,7 +7,8 @@ import {
   SUPABASE_MISCONFIGURED_MESSAGE,
   SUPABASE_MISSING_SERVICE_KEY_MESSAGE,
 } from '@/lib/supabase';
-import { getSessionFromCookies } from '@/lib/auth';
+import { getSession } from '@/lib/auth';
+import { audit } from '@/lib/admin-users';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -42,10 +43,11 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const isAdmin = await getSessionFromCookies();
-    if (!isAdmin) {
+    const session = await getSession();
+    if (!session) {
       return NextResponse.json({ success: false, error: 'Sesi berakhir, masuk kembali.' }, { status: 401 });
     }
+    await audit(session, 'create_team', 'teams');
 
     if (!isServiceRoleConfigured()) {
       return NextResponse.json({ success: false, error: SUPABASE_MISSING_SERVICE_KEY_MESSAGE }, { status: 503 });

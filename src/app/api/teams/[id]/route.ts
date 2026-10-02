@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { supabase, getServiceSupabase, isSupabaseConfigured, isServiceRoleConfigured, SUPABASE_MISCONFIGURED_MESSAGE, SUPABASE_MISSING_SERVICE_KEY_MESSAGE } from '@/lib/supabase';
-import { getSessionFromCookies } from '@/lib/auth';
+import { getSession } from '@/lib/auth';
+import { audit } from '@/lib/admin-users';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -43,10 +44,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const isAdmin = await getSessionFromCookies();
-    if (!isAdmin) {
+    const session = await getSession();
+    if (!session) {
       return NextResponse.json({ success: false, error: 'Sesi berakhir, masuk kembali.' }, { status: 401 });
     }
+    await audit(session, 'update_team', 'teams');
 
     if (!UUID_RE.test(id)) {
       return NextResponse.json({ success: false, error: 'ID tim tidak valid.' }, { status: 400 });
@@ -122,10 +124,11 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const isAdmin = await getSessionFromCookies();
-    if (!isAdmin) {
+    const session = await getSession();
+    if (!session) {
       return NextResponse.json({ success: false, error: 'Sesi berakhir, masuk kembali.' }, { status: 401 });
     }
+    await audit(session, 'update_team', 'teams');
 
     if (!UUID_RE.test(id)) {
       return NextResponse.json({ success: false, error: 'ID tim tidak valid.' }, { status: 400 });

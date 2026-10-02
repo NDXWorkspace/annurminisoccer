@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import {
   supabase,
   getServiceSupabase,
@@ -7,7 +7,8 @@ import {
   SUPABASE_MISCONFIGURED_MESSAGE,
   SUPABASE_MISSING_SERVICE_KEY_MESSAGE,
 } from '@/lib/supabase';
-import { getSessionFromCookies } from '@/lib/auth';
+import { getSession } from '@/lib/auth';
+import { audit } from '@/lib/admin-users';
 
 const defaultSettings = {
   id: 'default',
@@ -17,7 +18,7 @@ const defaultSettings = {
   location: 'Lapangan An-Nur',
   map_url: null,
   rules_text: null,
-  tiebreak_rules: 'poin → selisih gol → gol masuk',
+  tiebreak_rules: 'poin â†’ selisih gol â†’ gol masuk',
   contact_info: null,
 };
 
@@ -144,10 +145,11 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   try {
-    const isAdmin = await getSessionFromCookies();
-    if (!isAdmin) {
+    const session = await getSession();
+    if (!session) {
       return NextResponse.json({ success: false, error: 'Sesi berakhir, masuk kembali.' }, { status: 401 });
     }
+    await audit(session, 'update_settings', 'event_settings');
 
     if (!isServiceRoleConfigured()) {
       return NextResponse.json({ success: false, error: SUPABASE_MISSING_SERVICE_KEY_MESSAGE }, { status: 503 });

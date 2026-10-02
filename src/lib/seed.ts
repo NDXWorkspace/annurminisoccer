@@ -6,29 +6,26 @@
 //
 // Kalau data resmi berubah, jalankan skrip itu — jangan menebak angka.
 //
-// Terakhir disegarkan: 2026-10-01
+// Terakhir disegarkan: 2026-10-02
 // =============================================
 
 import { EventSettings, MatchWithTeams, Team } from './types';
 
-const CREATED_AT = "2026-09-30T14:48:51.262284+00:00";
-const UPDATED_AT = "2026-09-30T14:48:51.262284+00:00";
+const CREATED_AT = "2026-10-01T10:20:19.117504+00:00";
+const UPDATED_AT = "2026-10-01T10:21:11.011165+00:00";
 
 export const SEED_TEAMS: Team[] = [
-  { id: "a2222222-2222-2222-2222-222222222222", name: "Bintang Timur FC", short_name: "BTM", logo_url: null, group_name: "A", color: "#1E63D6", created_at: CREATED_AT },
-  { id: "a3333333-3333-3333-3333-333333333333", name: "Elang Perkasa", short_name: "ELG", logo_url: null, group_name: "A", color: "#2563EB", created_at: CREATED_AT },
-  { id: "a1111111-1111-1111-1111-111111111111", name: "Garuda Muda FC", short_name: "GAR", logo_url: null, group_name: "A", color: "#0B3D91", created_at: CREATED_AT },
-  { id: "a4444444-4444-4444-4444-444444444444", name: "Rajawali Sakti", short_name: "RJW", logo_url: null, group_name: "A", color: "#0284C7", created_at: CREATED_AT },
-  { id: "b4444444-4444-4444-4444-444444444444", name: "An-Nur All Star", short_name: "ANN", logo_url: null, group_name: "B", color: "#7C3AED", created_at: CREATED_AT },
-  { id: "b3333333-3333-3333-3333-333333333333", name: "Badak Mandiri", short_name: "BDK", logo_url: null, group_name: "B", color: "#DC2626", created_at: CREATED_AT },
-  { id: "b1111111-1111-1111-1111-111111111111", name: "Harimau Putih", short_name: "HMP", logo_url: null, group_name: "B", color: "#059669", created_at: CREATED_AT },
-  { id: "b2222222-2222-2222-2222-222222222222", name: "Singa Muda", short_name: "SGM", logo_url: null, group_name: "B", color: "#D97706", created_at: CREATED_AT },
+  { id: "9a69f05c-7507-485b-8051-b7b1f9a6fa69", name: "Annur All Star", short_name: "ALS", logo_url: null, group_name: "A", color: "#ec22e5", created_at: CREATED_AT },
+  { id: "e3360791-ec71-454d-8304-cfb8cc53e2e3", name: "Argentina Football Club", short_name: "AFA", logo_url: null, group_name: "A", color: "#0561ff", created_at: CREATED_AT },
+  { id: "9243cec0-de54-4aa2-a469-bda99b7f9cbc", name: "Dungong FC", short_name: "GFC", logo_url: null, group_name: "A", color: "#0B3D91", created_at: CREATED_AT },
+  { id: "05545541-ba92-4ffa-bbad-fb302569e101", name: "Kasap FC", short_name: "KFC", logo_url: null, group_name: "A", color: "#e91616", created_at: CREATED_AT },
 ];
 
 const RAW_MATCHES = [
-  { id: "c2222222-2222-2222-2222-222222222222", team_a_id: "a3333333-3333-3333-3333-333333333333", team_b_id: "a4444444-4444-4444-4444-444444444444", score_a: 1, score_b: 0, status: "finished", match_date: "2026-10-09", kickoff_time: "09:00:00", field: "A", stage: "grup", group_name: "A" },
-  { id: "c3333333-3333-3333-3333-333333333333", team_a_id: "b1111111-1111-1111-1111-111111111111", team_b_id: "b2222222-2222-2222-2222-222222222222", score_a: 8, score_b: 1, status: "finished", match_date: "2026-10-09", kickoff_time: "10:00:00", field: "B", stage: "grup", group_name: "B" },
-  { id: "c4444444-4444-4444-4444-444444444444", team_a_id: "b3333333-3333-3333-3333-333333333333", team_b_id: "b4444444-4444-4444-4444-444444444444", score_a: 0, score_b: 17, status: "finished", match_date: "2026-10-09", kickoff_time: "11:00:00", field: "B", stage: "grup", group_name: "B" },
+  { id: "f30b8d86-eae7-4e8b-9074-492786e30e88", team_a_id: "9a69f05c-7507-485b-8051-b7b1f9a6fa69", team_b_id: "05545541-ba92-4ffa-bbad-fb302569e101", score_a: 0, score_b: 0, status: "scheduled", match_date: "2026-10-01", kickoff_time: "19:00:00", field: "1", stage: "grup", group_name: null },
+  { id: "646f811a-cf89-4e38-a158-ddabcf67aa9c", team_a_id: "9a69f05c-7507-485b-8051-b7b1f9a6fa69", team_b_id: "e3360791-ec71-454d-8304-cfb8cc53e2e3", score_a: 0, score_b: 0, status: "scheduled", match_date: "2026-10-01", kickoff_time: "19:00:00", field: "1", stage: "grup", group_name: null },
+  { id: "c8456dc5-457b-4ded-8eee-740f868788d1", team_a_id: "e3360791-ec71-454d-8304-cfb8cc53e2e3", team_b_id: "9a69f05c-7507-485b-8051-b7b1f9a6fa69", score_a: 0, score_b: 12, status: "finished", match_date: "2026-10-01", kickoff_time: "19:00:00", field: "1", stage: "grup", group_name: null },
+  { id: "8a87ce14-d436-4fee-9699-3fbdc62e52e0", team_a_id: "e3360791-ec71-454d-8304-cfb8cc53e2e3", team_b_id: "9243cec0-de54-4aa2-a469-bda99b7f9cbc", score_a: 0, score_b: 0, status: "scheduled", match_date: "2026-10-01", kickoff_time: "19:00:00", field: "1", stage: "grup", group_name: null },
 ] as const;
 
 /** Pertandingan yang sudah dilektor tim A dan B, sama seperti output API. */
@@ -59,6 +56,6 @@ export const SEED_SETTINGS: EventSettings = {
   location: "Lapangan An-Nur",
   map_url: null,
   rules_text: null,
-  tiebreak_rules: "poin → selisih gol → gol masuk",
+  tiebreak_rules: "poin ??? selisih gol ??? gol masuk",
   contact_info: null,
 };

@@ -9,9 +9,18 @@ export function calculateStandings(
   groupName: string
 ): StandingRow[] {
   const groupTeams = teams.filter((t) => t.group_name === groupName);
-  const finishedMatches = matches.filter(
-    (m) => m.status === 'finished' && m.group_name === groupName
-  );
+  const finishedMatches = matches.filter((m) => {
+    if (m.status !== 'finished') return false;
+    if (m.group_name === groupName) return true;
+    // Fallback: baris matches tanpa group_name tetap dihitung selama
+    // kedua timnya ada di grup ini (data lama bisa NULL/kosong).
+    if (!m.group_name) {
+      const ta = teams.find((t) => t.id === m.team_a_id);
+      const tb = teams.find((t) => t.id === m.team_b_id);
+      return ta?.group_name === groupName && tb?.group_name === groupName;
+    }
+    return false;
+  });
 
   const rows: StandingRow[] = groupTeams.map((team) => {
     let played = 0, won = 0, drawn = 0, lost = 0, gf = 0, ga = 0;

@@ -22,10 +22,10 @@ export const SEED_TEAMS: Team[] = [
 ];
 
 const RAW_MATCHES = [
-  { id: "f30b8d86-eae7-4e8b-9074-492786e30e88", team_a_id: "9a69f05c-7507-485b-8051-b7b1f9a6fa69", team_b_id: "05545541-ba92-4ffa-bbad-fb302569e101", score_a: 0, score_b: 0, status: "scheduled", match_date: "2026-10-01", kickoff_time: "19:00:00", field: "1", stage: "grup", group_name: null },
-  { id: "646f811a-cf89-4e38-a158-ddabcf67aa9c", team_a_id: "9a69f05c-7507-485b-8051-b7b1f9a6fa69", team_b_id: "e3360791-ec71-454d-8304-cfb8cc53e2e3", score_a: 0, score_b: 0, status: "scheduled", match_date: "2026-10-01", kickoff_time: "19:00:00", field: "1", stage: "grup", group_name: null },
-  { id: "c8456dc5-457b-4ded-8eee-740f868788d1", team_a_id: "e3360791-ec71-454d-8304-cfb8cc53e2e3", team_b_id: "9a69f05c-7507-485b-8051-b7b1f9a6fa69", score_a: 0, score_b: 12, status: "finished", match_date: "2026-10-01", kickoff_time: "19:00:00", field: "1", stage: "grup", group_name: null },
-  { id: "8a87ce14-d436-4fee-9699-3fbdc62e52e0", team_a_id: "e3360791-ec71-454d-8304-cfb8cc53e2e3", team_b_id: "9243cec0-de54-4aa2-a469-bda99b7f9cbc", score_a: 0, score_b: 0, status: "scheduled", match_date: "2026-10-01", kickoff_time: "19:00:00", field: "1", stage: "grup", group_name: null },
+  { id: "f30b8d86-eae7-4e8b-9074-492786e30e88", team_a_id: "9a69f05c-7507-485b-8051-b7b1f9a6fa69", team_b_id: "05545541-ba92-4ffa-bbad-fb302569e101", score_a: 0, score_b: 0, status: "scheduled", match_date: "2026-10-01", kickoff_time: "19:00:00", field: "1", stage: "grup", group_name: "A" },
+  { id: "646f811a-cf89-4e38-a158-ddabcf67aa9c", team_a_id: "9a69f05c-7507-485b-8051-b7b1f9a6fa69", team_b_id: "e3360791-ec71-454d-8304-cfb8cc53e2e3", score_a: 0, score_b: 0, status: "scheduled", match_date: "2026-10-01", kickoff_time: "19:00:00", field: "1", stage: "grup", group_name: "A" },
+  { id: "c8456dc5-457b-4ded-8eee-740f868788d1", team_a_id: "e3360791-ec71-454d-8304-cfb8cc53e2e3", team_b_id: "9a69f05c-7507-485b-8051-b7b1f9a6fa69", score_a: 0, score_b: 12, status: "finished", match_date: "2026-10-01", kickoff_time: "19:00:00", field: "1", stage: "grup", group_name: "A" },
+  { id: "8a87ce14-d436-4fee-9699-3fbdc62e52e0", team_a_id: "e3360791-ec71-454d-8304-cfb8cc53e2e3", team_b_id: "9243cec0-de54-4aa2-a469-bda99b7f9cbc", score_a: 0, score_b: 0, status: "scheduled", match_date: "2026-10-01", kickoff_time: "19:00:00", field: "1", stage: "grup", group_name: "A" },
 ] as const;
 
 /** Pertandingan yang sudah dilektor tim A dan B, sama seperti output API. */

@@ -39,6 +39,30 @@ export async function findUserByUsername(username: string): Promise<AdminUser | 
   return data ?? null;
 }
 
+export async function findUserById(id: string): Promise<AdminUser | null> {
+  if (!isServiceRoleConfigured()) return null;
+  const sb = getServiceSupabase();
+  const { data, error } = await sb
+    .from('admin_users')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle<AdminUser>();
+  if (error) throw error;
+  return data ?? null;
+}
+
+/** True bila user masih ada dan tidak dinonaktifkan. Dipakai untuk menegakkan deaktivasi segera. */
+export async function isUserActive(id: string): Promise<boolean> {
+  const u = await findUserById(id);
+  return !!u && u.active === true;
+}
+
+export async function updatePassword(id: string, password_hash: string): Promise<void> {
+  const sb = getServiceSupabase();
+  const { error } = await sb.from('admin_users').update({ password_hash }).eq('id', id);
+  if (error) throw error;
+}
+
 /**
  * Saat tabel admin_users masih kosong (deploy pertama), buat satu superadmin
  * "admin" dari ADMIN_PASSWORD agar tidak terkunci keluar. Setelahnya, ADMIN_PASSWORD

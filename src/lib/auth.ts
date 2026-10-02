@@ -1,7 +1,7 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import { COOKIE_NAME, sessionSecretBytes } from './session';
-import type { Role } from './admin-users';
+import { isUserActive, type Role } from './admin-users';
 
 const SESSION_DURATION = 12 * 60 * 60; // 12 hours in seconds
 
@@ -34,12 +34,17 @@ export async function verifyToken(token: string): Promise<SessionPayload | null>
   }
 }
 
-/** Sesi dari cookie, null bila tidak sah / tidak ada. */
+/** Sesi dari cookie, null bila tidak sah / tidak ada / user dinonaktifkan. */
 export async function getSession(): Promise<SessionPayload | null> {
   const cookieStore = await cookies();
   const session = cookieStore.get(COOKIE_NAME);
   if (!session?.value) return null;
-  return verifyToken(session.value);
+  const payload = await verifyToken(session.value);
+  if (!payload) return null;
+  // Tegakkan deaktivasi segera: JWT tidak berlaku bila user dirubah/dihapus/di-nonaktifkan.
+  const active = await isUserActive(payload.sub);
+  if (!active) return null;
+  return payload;
 }
 
 /** Back-compat: banyak route lama hanya butuh boolean "sudah login". */

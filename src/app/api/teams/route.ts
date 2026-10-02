@@ -8,6 +8,7 @@ import {
   SUPABASE_MISSING_SERVICE_KEY_MESSAGE,
 } from '@/lib/supabase';
 import { getSession } from '@/lib/auth';
+import { parseJsonBody } from '@/lib/http';
 import { audit } from '@/lib/admin-users';
 
 export const dynamic = 'force-dynamic';
@@ -53,7 +54,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: SUPABASE_MISSING_SERVICE_KEY_MESSAGE }, { status: 503 });
     }
 
-    const body = await request.json();
+    const parsedBody = await parseJsonBody(request);
+    if (!parsedBody.ok) return parsedBody.response;
+    const body = parsedBody.body;
     const name = typeof body?.name === 'string' ? body.name.trim() : '';
     const short_name = typeof body?.short_name === 'string' ? body.short_name.trim().toUpperCase() : '';
     const group_name = typeof body?.group_name === 'string' ? body.group_name.trim() : '';

@@ -8,6 +8,7 @@ import {
   audit,
 } from '@/lib/admin-users';
 import { isServiceRoleConfigured, SUPABASE_MISSING_SERVICE_KEY_MESSAGE } from '@/lib/supabase';
+import { parseJsonBody } from '@/lib/http';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,7 +41,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: SUPABASE_MISSING_SERVICE_KEY_MESSAGE }, { status: 503 });
     }
 
-    const { username, password } = await request.json();
+    const parsedBody = await parseJsonBody(request);
+    if (!parsedBody.ok) return parsedBody.response;
+    const { username, password } = parsedBody.body;
     if (typeof username !== 'string' || typeof password !== 'string' || !username || !password) {
       return NextResponse.json({ success: false, error: 'Username dan password wajib diisi.' }, { status: 400 });
     }

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireSuperAdmin } from '@/lib/auth';
 import { listUsers, setUserActive, setUserRole, deleteUser, audit, hashPassword } from '@/lib/admin-users';
 import { getServiceSupabase, isServiceRoleConfigured, SUPABASE_MISSING_SERVICE_KEY_MESSAGE } from '@/lib/supabase';
+import { parseJsonBody } from '@/lib/http';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,7 +24,9 @@ export async function POST(request: Request) {
   if (!admin) return NextResponse.json({ success: false, error: 'Hanya superadmin.' }, { status: 403 });
   if (!isServiceRoleConfigured()) return NextResponse.json({ success: false, error: SUPABASE_MISSING_SERVICE_KEY_MESSAGE }, { status: 503 });
   try {
-    const { username, password, role } = await request.json();
+    const parsedBody = await parseJsonBody(request);
+    if (!parsedBody.ok) return parsedBody.response;
+    const { username, password, role } = parsedBody.body;
     if (typeof username !== 'string' || !username.trim() || typeof password !== 'string' || password.length < 8) {
       return NextResponse.json({ success: false, error: 'Username wajib, password minimal 8 karakter.' }, { status: 400 });
     }
@@ -51,7 +54,9 @@ export async function PUT(request: Request) {
   const admin = await requireSuperAdmin();
   if (!admin) return NextResponse.json({ success: false, error: 'Hanya superadmin.' }, { status: 403 });
   try {
-    const { id, role, active } = await request.json();
+    const parsedBody = await parseJsonBody(request);
+    if (!parsedBody.ok) return parsedBody.response;
+    const { id, role, active } = parsedBody.body;
     if (typeof id !== 'string') return NextResponse.json({ success: false, error: 'id wajib.' }, { status: 400 });
     if (id === admin.sub && (active === false || role === 'admin')) {
       return NextResponse.json({ success: false, error: 'Tidak bisa menurunkan diri sendiri.' }, { status: 400 });

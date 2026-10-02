@@ -9,6 +9,7 @@ import {
 } from '@/lib/supabase';
 import { getSession } from '@/lib/auth';
 import { audit } from '@/lib/admin-users';
+import { parseJsonBody } from '@/lib/http';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -76,7 +77,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: SUPABASE_MISSING_SERVICE_KEY_MESSAGE }, { status: 503 });
     }
     
-    const body = await request.json();
+    const parsedBody = await parseJsonBody(request);
+    if (!parsedBody.ok) return parsedBody.response;
+    const body = parsedBody.body;
 
     const team_a_id = typeof body?.team_a_id === 'string' ? body.team_a_id : '';
     const team_b_id = typeof body?.team_b_id === 'string' ? body.team_b_id : '';

@@ -2,6 +2,7 @@
 import { getServiceSupabase, isServiceRoleConfigured, SUPABASE_MISSING_SERVICE_KEY_MESSAGE } from '@/lib/supabase';
 import { getSession } from '@/lib/auth';
 import { audit } from '@/lib/admin-users';
+import { parseJsonBody } from '@/lib/http';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -23,7 +24,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ success: false, error: SUPABASE_MISSING_SERVICE_KEY_MESSAGE }, { status: 503 });
     }
 
-    const body = await request.json();
+    const parsedBody = await parseJsonBody(request);
+    if (!parsedBody.ok) return parsedBody.response;
+    const body = parsedBody.body;
     const updateData: Record<string, number | string> = {};
 
     if (body?.score_a !== undefined) {

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { findUserById, verifyUserPassword, hashPassword, updatePassword, audit } from '@/lib/admin-users';
 import { isServiceRoleConfigured, SUPABASE_MISSING_SERVICE_KEY_MESSAGE } from '@/lib/supabase';
+import { parseJsonBody } from '@/lib/http';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +15,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: SUPABASE_MISSING_SERVICE_KEY_MESSAGE }, { status: 503 });
   }
   try {
-    const { current_password, new_password } = await request.json();
+    const parsedBody = await parseJsonBody(request);
+    if (!parsedBody.ok) return parsedBody.response;
+    const { current_password, new_password } = parsedBody.body;
     if (typeof current_password !== 'string' || typeof new_password !== 'string') {
       return NextResponse.json({ success: false, error: 'Data tidak lengkap.' }, { status: 400 });
     }

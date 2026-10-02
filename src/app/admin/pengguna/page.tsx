@@ -83,7 +83,8 @@ export default function PenggunaPage() {
     }
   };
 
-  const remove = async (id: string) => {
+  const remove = async (id: string, username?: string) => {
+    if (!window.confirm(`Hapus pengguna "${username ?? id}"? Tindakan ini tidak bisa dibatalkan.`)) return;
     setMessage(null);
     try {
       const res = await fetch(`/api/admin/users?id=${id}`, { method: 'DELETE' });
@@ -180,7 +181,7 @@ export default function PenggunaPage() {
                   <button onClick={() => patch(u.id, u.role, !u.active)} className="rounded-md border border-gray-200 px-2 py-1 text-xs hover:bg-gray-50">
                     {u.active ? 'Nonaktifkan' : 'Aktifkan'}
                   </button>
-                  <button onClick={() => remove(u.id)} className="rounded-md border border-red-200 px-2 py-1 text-xs text-red-600 hover:bg-red-50">
+                  <button onClick={() => remove(u.id, u.username)} className="rounded-md border border-red-200 px-2 py-1 text-xs text-red-600 hover:bg-red-50">
                     Hapus
                   </button>
                 </td>

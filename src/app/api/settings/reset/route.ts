@@ -1,15 +1,16 @@
 import { NextResponse } from 'next/server';
 import { getServiceSupabase, isServiceRoleConfigured, SUPABASE_MISSING_SERVICE_KEY_MESSAGE } from '@/lib/supabase';
-import { getSessionFromCookies } from '@/lib/auth';
+import { requireSuperAdmin } from '@/lib/auth';
+import { audit } from '@/lib/admin-users';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function POST() {
   try {
-    const isAdmin = await getSessionFromCookies();
-    if (!isAdmin) {
-      return NextResponse.json({ success: false, error: 'Sesi berakhir, masuk kembali.' }, { status: 401 });
+    const session = await requireSuperAdmin();
+    if (!session) {
+      return NextResponse.json({ success: false, error: 'Hanya superadmin yang bisa reset data.' }, { status: 403 });
     }
 
     if (!isServiceRoleConfigured()) {
@@ -31,6 +32,8 @@ export async function POST() {
       .neq('id', '00000000-0000-0000-0000-000000000000');
 
     if (teamsError) throw teamsError;
+
+    await audit(session, 'reset_data', 'teams,matches');
 
     return NextResponse.json({ success: true, data: null, message: 'Semua data pertandingan dan tim telah direset' });
   } catch (error: unknown) {

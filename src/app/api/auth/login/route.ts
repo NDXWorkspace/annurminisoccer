@@ -1,11 +1,19 @@
 import { NextResponse } from 'next/server';
-import { createSession, verifyPassword, COOKIE_NAME, SESSION_DURATION } from '@/lib/auth';
 import { cookies } from 'next/headers';
+import { createSession, COOKIE_NAME, SESSION_DURATION } from '@/lib/auth';
+import {
+  ensureBootstrapSuperadmin,
+  findUserByUsername,
+  verifyUserPassword,
+  audit,
+} from '@/lib/admin-users';
+import { isServiceRoleConfigured, SUPABASE_MISSING_SERVICE_KEY_MESSAGE } from '@/lib/supabase';
+
+export const dynamic = 'force-dynamic';
 
 const rateLimit = new Map<string, { count: number; timestamp: number }>();
 
 function touchRateLimit(ip: string, now: number): boolean {
-  // Sweep stale entries so the map cannot grow without bound.
   if (rateLimit.size > 500) {
     for (const [key, rec] of rateLimit) {
       if (now - rec.timestamp >= 60000) rateLimit.delete(key);
@@ -28,25 +36,35 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Terlalu banyak percobaan login. Silakan coba lagi nanti.' }, { status: 429 });
     }
 
-    const { password } = await request.json();
-
-    const isPasswordValid = await verifyPassword(password);
-    if (!isPasswordValid) {
-      return NextResponse.json({ success: false, error: 'Password salah' }, { status: 401 });
+    if (!isServiceRoleConfigured()) {
+      return NextResponse.json({ success: false, error: SUPABASE_MISSING_SERVICE_KEY_MESSAGE }, { status: 503 });
     }
 
-    const token = await createSession();
-    
+    const { username, password } = await request.json();
+    if (typeof username !== 'string' || typeof password !== 'string' || !username || !password) {
+      return NextResponse.json({ success: false, error: 'Username dan password wajib diisi.' }, { status: 400 });
+    }
+
+    await ensureBootstrapSuperadmin();
+
+    const user = await findUserByUsername(username.trim());
+    if (!user || !user.active || !(await verifyUserPassword(user, password))) {
+      return NextResponse.json({ success: false, error: 'Username atau password salah' }, { status: 401 });
+    }
+
+    const token = await createSession({ sub: user.id, username: user.username, role: user.role });
     const cookieStore = await cookies();
     cookieStore.set(COOKIE_NAME, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: parseInt(String(SESSION_DURATION), 10) || 86400,
+      maxAge: SESSION_DURATION,
     });
 
-    return NextResponse.json({ success: true, data: null });
+    await audit({ id: user.id, username: user.username }, 'login', 'auth', { ip });
+
+    return NextResponse.json({ success: true, data: { username: user.username, role: user.role } });
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json({ success: false, error: 'Terjadi kesalahan' }, { status: 500 });

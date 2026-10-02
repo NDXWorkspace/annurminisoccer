@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 export default function LoginForm() {
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -34,7 +35,7 @@ export default function LoginForm() {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ username, password }),
       });
 
       if (res.ok) {
@@ -46,7 +47,7 @@ export default function LoginForm() {
       }
 
       const data = await res.json().catch(() => ({}));
-      setError(data.error || 'Password salah');
+      setError(data.error || 'Username atau password salah');
     } catch {
       setError('Tidak dapat menghubungi server. Coba lagi.');
     } finally {
@@ -75,6 +76,22 @@ export default function LoginForm() {
           )}
 
           <div>
+            <label htmlFor="username" className="mb-1.5 block text-sm font-medium text-gray-700">
+              Username
+            </label>
+            <input
+              id="username"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              autoComplete="username"
+              autoFocus
+              placeholder="Masukkan username"
+              className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-[15px] outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+
+          <div>
             <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-gray-700">
               Password panitia
             </label>
@@ -84,7 +101,6 @@ export default function LoginForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
-              autoFocus
               placeholder="Masukkan password"
               className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-[15px] outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
@@ -119,7 +135,7 @@ export default function LoginForm() {
 
           <button
             type="submit"
-            disabled={isLoading || password.length < 4}
+            disabled={isLoading || password.length < 4 || username.trim().length === 0}
             className="flex min-h-[46px] w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 font-semibold text-white transition-colors hover:bg-primary-light disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isLoading ? (

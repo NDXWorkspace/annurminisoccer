@@ -121,8 +121,10 @@ export default function LivePage() {
       )}
 
       {loading && matches.length === 0 ? (
-        <div className="flex h-48 items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-flood border-t-transparent" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="h-40 animate-pulse rounded-xl border border-line bg-ink-raised" />
+          ))}
         </div>
       ) : (
         <div className="space-y-12">

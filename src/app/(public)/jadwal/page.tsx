@@ -20,6 +20,7 @@ export default function JadwalPage() {
   const [date, setDate] = useState('');
   const [stage, setStage] = useState('all');
   const [field, setField] = useState('all');
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
     const load = async (initial = false) => {
@@ -60,10 +61,19 @@ export default function JadwalPage() {
           if (date && m.match_date !== date) return false;
           if (stage !== 'all' && m.stage !== stage && m.group_name !== stage) return false;
           if (field !== 'all' && m.field !== field) return false;
+          if (query) {
+            const q = query.toLowerCase();
+            const match =
+              m.team_a.name.toLowerCase().includes(q) ||
+              m.team_b.name.toLowerCase().includes(q) ||
+              m.team_a.short_name.toLowerCase().includes(q) ||
+              m.team_b.short_name.toLowerCase().includes(q);
+            if (!match) return false;
+          }
           return true;
         })
         .sort((a, b) => `${a.match_date}${a.kickoff_time}`.localeCompare(`${b.match_date}${b.kickoff_time}`)),
-    [matches, date, stage, field]
+    [matches, date, stage, field, query]
   );
 
   return (
@@ -96,6 +106,16 @@ export default function JadwalPage() {
         )}
 
         <div className="grid grid-cols-2 gap-3">
+          <label className="block col-span-2">
+            <span className="label-programme mb-1.5 block text-chalk-faint">Cari tim</span>
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Nama atau singkatan tim…"
+              className="w-full rounded-lg border border-line bg-ink-sunken px-3 py-2.5 text-sm text-chalk outline-none transition-colors focus:border-flood/50"
+            />
+          </label>
           <label className="block">
             <span className="label-programme mb-1.5 block text-chalk-faint">Fase / Grup</span>
             <select

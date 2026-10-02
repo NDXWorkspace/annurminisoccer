@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+import { getSession, createSession, COOKIE_NAME, SESSION_DURATION } from '@/lib/auth';
+import { cookies } from 'next/headers';
 
 export async function GET() {
   try {
@@ -7,6 +8,16 @@ export async function GET() {
     if (!session) {
       return NextResponse.json({ success: false, authenticated: false }, { status: 401 });
     }
+    // Sliding session: setiap check aktif memperpanjang cookie sebesar SESSION_DURATION.
+    const token = await createSession({ sub: session.sub, username: session.username, role: session.role });
+    const cookieStore = await cookies();
+    cookieStore.set(COOKIE_NAME, token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/',
+      maxAge: SESSION_DURATION,
+    });
     return NextResponse.json({ success: true, authenticated: true, data: { username: session.username, role: session.role } });
   } catch (error) {
     console.error('Auth check error:', error);

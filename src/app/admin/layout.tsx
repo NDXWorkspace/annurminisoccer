@@ -40,6 +40,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     };
 
     checkAuth();
+
+    // Sliding session: perbarui cookie setiap 30 menit + saat tab aktif kembali.
+    const refreshId = window.setInterval(() => {
+      fetch('/api/auth/check', { cache: 'no-store' }).catch(() => {});
+    }, 30 * 60 * 1000);
+    const onVisible = () => {
+      if (!document.hidden) fetch('/api/auth/check', { cache: 'no-store' }).catch(() => {});
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      window.clearInterval(refreshId);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, [router, isLoginPage]);
 
   const handleLogout = async () => {

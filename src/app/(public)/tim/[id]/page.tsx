@@ -1,71 +1,35 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import type { ApiResponse, GroupStandings, MatchWithTeams, Player, Team } from '@/lib/types';
-import { calculateAllStandings } from '@/lib/utils';
-import { SEED_TEAMS, SEED_MATCHES, seedTeamMatches, seedTeamPlayers } from '@/lib/seed';
-import { positionLabel } from '@/lib/utils';
+import { calculateStandings, positionLabel } from '@/lib/utils';
+import { matchesStore, teamsStore, usePlayers, useResource } from '@/lib/live-store';
 import Monogram from '@/components/Monogram';
 import CategoryMark from '@/components/CategoryMark';
 import MatchRow from '@/components/MatchRow';
 
 export default function TeamDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const seedTeam = SEED_TEAMS.find((t) => t.id === id) ?? null;
-  const [team, setTeam] = useState<Team | null>(seedTeam);
-  const [matches, setMatches] = useState<MatchWithTeams[]>(seedTeamMatches(id));
-  const [players, setPlayers] = useState<Player[]>(seedTeamPlayers(id));
-  const [standings, setStandings] = useState<GroupStandings[]>(() =>
-    calculateAllStandings(SEED_TEAMS, SEED_MATCHES)
+
+  // Sama seperti halaman lain: satu store, satu salinan data.
+  const [allTeams] = useResource(teamsStore);
+  const [allMatches, online] = useResource(matchesStore);
+  const [players] = usePlayers(id);
+
+  const team = useMemo(() => allTeams.find((t) => t.id === id) ?? null, [allTeams, id]);
+
+  const matches = useMemo(
+    () =>
+      allMatches
+        .filter((m) => m.team_a_id === id || m.team_b_id === id)
+        .sort((a, b) =>
+          `${b.match_date}${b.kickoff_time}`.localeCompare(`${a.match_date}${a.kickoff_time}`)
+        ),
+    [allMatches, id]
   );
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const load = async (initial = false) => {
-      try {
-        if (initial) setLoading(true);
-        const [teamsRes, matchesRes, playersRes] = await Promise.all([
-          fetch('/api/teams', { cache: 'no-store' }),
-          fetch('/api/matches', { cache: 'no-store' }),
-          fetch(`/api/players?team_id=${id}`, { cache: 'no-store' }),
-        ]);
-        if (!teamsRes.ok || !matchesRes.ok) throw new Error('Gagal memuat data');
-        const teamsData: ApiResponse<Team[]> = await teamsRes.json();
-        const matchesData: ApiResponse<MatchWithTeams[]> = await matchesRes.json();
-        if (!teamsData.success || !teamsData.data) throw new Error('Tim tidak ditemukan');
-        const found = teamsData.data.find((t) => t.id === id);
-        if (!found) throw new Error('Tim tidak ditemukan');
-        setTeam(found);
-        if (playersRes.ok) {
-          const pData: ApiResponse<Player[]> = await playersRes.json().catch(() => ({}));
-          if (pData.success && pData.data) setPlayers(pData.data);
-        }
-        if (matchesData.success && matchesData.data) {
-          setMatches(
-            matchesData.data
-              .filter((m) => m.team_a_id === id || m.team_b_id === id)
-              .sort((a, b) =>
-                `${b.match_date}${b.kickoff_time}`.localeCompare(`${a.match_date}${a.kickoff_time}`)
-              )
-          );
-          setStandings(calculateAllStandings(teamsData.data, matchesData.data));
-        }
-        setError(null);
-      } catch (e) {
-        if (initial) setError(e instanceof Error ? e.message : 'Gagal memuat data');
-      } finally {
-        if (initial) setLoading(false);
-      }
-    };
-    load(true);
-    const i = setInterval(() => load(false), 10_000);
-    return () => clearInterval(i);
-  }, [id]);
-
-  if (loading && !team) {
+  if (!online && !team) {
     return (
       <div className="wrap pt-12">
         <div className="h-10 w-2/3 rounded-full bg-raise" />
@@ -74,10 +38,10 @@ export default function TeamDetailPage() {
     );
   }
 
-  if (error || !team) {
+  if (!team) {
     return (
       <div className="wrap pt-12">
-        <p className="py-8 text-muted">{error || 'Tim tidak ditemukan.'}</p>
+        <p className="py-8 text-muted">Tim tidak ditemukan.</p>
         <Link href="/tim" className="label text-blue">
           ← Kembali ke daftar tim
         </Link>
@@ -85,9 +49,11 @@ export default function TeamDetailPage() {
     );
   }
 
-  const row = standings
-    .find((g) => g.group_name === team.group_name)
-    ?.rows.find((r) => r.team.id === team.id);
+  const row = calculateStandings(
+    allTeams.filter((t) => t.group_name === team.group_name),
+    allMatches,
+    team.group_name
+  ).find((r) => r.team.id === team.id);
 
   return (
     <div className="wrap pt-12 pb-8">

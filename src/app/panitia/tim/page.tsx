@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { Team, TeamFormData } from '@/lib/types';
 import Monogram from '@/components/Monogram';
 import CategoryMark from '@/components/CategoryMark';
+import { announceChangeEverywhere, teamsStore, useResource } from '@/lib/live-store';
 
 const EMPTY: TeamFormData = {
   name: '',
@@ -15,40 +16,17 @@ const EMPTY: TeamFormData = {
 };
 
 export default function TimPanitia() {
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  //. Store yang sama dengan halaman Tim publik: ubah tim di sini, daftar
+  // publik ikut berubah seketika.
+  const [teams, online, reload] = useResource(teamsStore);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingTeam, setDeletingTeam] = useState<Team | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [formData, setFormData] = useState<TeamFormData>(EMPTY);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
 
-  async function loadTeams() {
-    try {
-      const res = await fetch('/api/teams', { cache: 'no-store' });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setLoadError(data.error || 'Gagal memuat tim.');
-        return;
-      }
-      if (data.success && data.data) {
-        setTeams(data.data);
-        setLoadError(null);
-      } else {
-        setLoadError(data.error || 'Tidak dapat memuat daftar tim.');
-      }
-    } catch {
-      setLoadError('Tidak dapat memuat daftar tim. Periksa koneksi lalu coba lagi.');
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    loadTeams();
-  }, []);
+  const isLoading = teams.length === 0 && !online;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,7 +43,8 @@ export default function TimPanitia() {
       });
       if (res.ok) {
         closeForm();
-        loadTeams();
+        void teamsStore.refresh();
+        announceChangeEverywhere();
         setMessage({
           type: 'success',
           text: editingId ? 'Tim berhasil diperbarui.' : 'Tim berhasil ditambahkan.',
@@ -86,7 +65,8 @@ export default function TimPanitia() {
       const res = await fetch(`/api/teams/${deletingTeam.id}`, { method: 'DELETE' });
       if (res.ok) {
         setDeletingTeam(null);
-        loadTeams();
+        void teamsStore.refresh();
+        announceChangeEverywhere();
         setMessage({ type: 'success', text: 'Tim berhasil dihapus.' });
       } else {
         const err = await res.json().catch(() => ({}));
@@ -137,10 +117,10 @@ export default function TimPanitia() {
         </p>
       )}
 
-      {loadError && (
+      {!online && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-full border border-danger/40 bg-danger/10 px-5 py-3">
-          <p className="text-sm text-danger">{loadError}</p>
-          <button onClick={() => loadTeams()} className="label text-text">
+          <p className="text-sm text-danger">Data tidak dapat dimuat.</p>
+          <button onClick={reload} className="label text-text">
             Coba lagi
           </button>
         </div>

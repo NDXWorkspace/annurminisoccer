@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import Link from 'next/link';
-import type { ApiResponse, MatchWithTeams } from '@/lib/types';
+import type { MatchWithTeams } from '@/lib/types';
 import { formatTime, formatShortDate } from '@/lib/utils';
-import { SEED_MATCHES } from '@/lib/seed';
+import { matchesStore, useResource } from '@/lib/live-store';
 
 interface RailItem {
   key: string;
@@ -18,34 +18,11 @@ interface RailItem {
 }
 
 /**
- * Ticker hasil: apa yang sudah dimuatultimate, berjalan pelan di bawah header.
- * Berhenti saat kursor mendekat supaya angka masih bisa dibaca.
+ * Ticker hasil. Membaca dari store yang sama dengan halaman lain, jadi
+ * tidak mungkin menampilkan skor berbeda dari jadwal di detik yang sama.
  */
 export default function MatchdayRail() {
-  const [matches, setMatches] = useState<MatchWithTeams[]>(SEED_MATCHES);
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      try {
-        const res = await fetch('/api/matches', { cache: 'no-store' });
-        if (!res.ok) return;
-        const data: ApiResponse<MatchWithTeams[]> = await res.json();
-        if (!cancelled && data.success && data.data) setMatches(data.data);
-      } catch {
-        // strip ini informatif; kegagalan poll membiarkan snapshot terakhir
-      } finally {
-        if (!cancelled) setLoaded(true);
-      }
-    };
-    load();
-    const interval = setInterval(load, 8000);
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, []);
+  const [matches] = useResource(matchesStore);
 
   const items = useMemo<RailItem[]>(() => {
     if (matches.length === 0) return [];
@@ -85,7 +62,7 @@ export default function MatchdayRail() {
     ];
   }, [matches]);
 
-  if (!loaded || items.length === 0) return null;
+  if (items.length === 0) return null;
 
   // Digandakan sekali supaya -50% berputar tanpa sambungan
   const loop = [...items, ...items];
@@ -102,9 +79,7 @@ export default function MatchdayRail() {
               href="/live"
               className="inline-flex items-center gap-2 px-5 py-3"
             >
-              <span
-                className={`label ${isLive ? 'text-yellow' : 'text-muted'}`}
-              >
+              <span className={`label ${isLive ? 'text-yellow' : 'text-muted'}`}>
                 {isLive && (
                   <span
                     className="mr-1.5 inline-block h-[7px] w-[7px] rounded-full bg-yellow animate-dot align-middle"
@@ -116,7 +91,9 @@ export default function MatchdayRail() {
               <span className="text-sm font-semibold text-muted">
                 {item.a}
                 <span className="num mx-1.5 text-base text-text">
-                  {hasScore ? `${item.scoreA}–${item.scoreB}` : formatTime(item.meta.split('·').pop()?.trim() ?? '00:00')}
+                  {hasScore
+                    ? `${item.scoreA}–${item.scoreB}`
+                    : formatTime(item.meta.split('·').pop()?.trim() ?? '00:00')}
                 </span>
                 {item.b}
               </span>

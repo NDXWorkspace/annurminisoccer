@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import type { ApiResponse, MatchWithTeams } from '@/lib/types';
+import type { MatchWithTeams } from '@/lib/types';
 import { formatShortDate, formatTime } from '@/lib/utils';
-import { SEED_MATCHES } from '@/lib/seed';
 import { useCategory } from '@/hooks/useCategory';
+import { matchesStore, useResource } from '@/lib/live-store';
 import MatchRow from '@/components/MatchRow';
 import Reveal from '@/components/Reveal';
 
@@ -22,37 +22,19 @@ function dayLabel(dateStr: string): string {
 }
 
 export default function JadwalPage() {
-  const [matches, setMatches] = useState<MatchWithTeams[]>(SEED_MATCHES);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [matches, online, reload] = useResource(matchesStore);
   const [category, setCategory] = useCategory();
   const [date, setDate] = useState('');
   const [stage, setStage] = useState('all');
   const [query, setQuery] = useState('');
 
+  // Hari terpilih mengikuti tanggal pertama yang benar-benar ada.
   useEffect(() => {
-    const load = async (initial = false) => {
-      try {
-        if (initial) setLoading(true);
-        const res = await fetch('/api/matches', { cache: 'no-store' });
-        if (!res.ok) throw new Error('Gagal memuat jadwal');
-        const data: ApiResponse<MatchWithTeams[]> = await res.json();
-        if (data.success && data.data) {
-          setMatches(data.data);
-          const first = [...new Set(data.data.map((m) => m.match_date))].sort()[0];
-          if (first) setDate((d) => d || first);
-        }
-        setError(null);
-      } catch {
-        if (initial) setError('Data tidak dapat dimuat.');
-      } finally {
-        if (initial) setLoading(false);
-      }
-    };
-    load(true);
-    const id = setInterval(() => load(false), 10_000);
-    return () => clearInterval(id);
-  }, []);
+    const first = [...new Set(matches.map((m) => m.match_date))].sort()[0];
+    if (first) setDate((d) => d || first);
+  }, [matches]);
+
+  const loading = matches.length === 0 && !online;
 
   const categories = useMemo(() => {
     const cats = [...new Set(matches.map((m) => m.category).filter(Boolean))] as string[];
@@ -171,10 +153,10 @@ export default function JadwalPage() {
         </div>
       </div>
 
-      {error && (
+      {!online && (
         <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-full border border-danger/40 bg-danger/10 px-5 py-3">
-          <p className="text-sm text-danger">{error}</p>
-          <button onClick={() => window.location.reload()} className="label text-text">
+          <p className="text-sm text-danger">Data tidak dapat dimuat.</p>
+          <button onClick={reload} className="label text-text">
             Coba lagi
           </button>
         </div>

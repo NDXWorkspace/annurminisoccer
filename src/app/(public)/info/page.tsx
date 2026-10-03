@@ -1,10 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import type { ApiResponse, EventSettings } from '@/lib/types';
 import { formatDate } from '@/lib/utils';
-import { SEED_SETTINGS } from '@/lib/seed';
+import { settingsStore, useResource } from '@/lib/live-store';
 import Reveal from '@/components/Reveal';
 
 const DEFAULT_RULES = [
@@ -16,29 +15,10 @@ const DEFAULT_RULES = [
 ];
 
 export default function InfoPage() {
-  const [settings, setSettings] = useState<EventSettings | null>(SEED_SETTINGS);
-  const [loading, setLoading] = useState(true);
+  // Pengaturan juga lewat store, jadi ubah dicommittee langsung tampil di sini.
+  const [settings, online] = useResource(settingsStore);
 
-  useEffect(() => {
-    const load = async (initial = false) => {
-      try {
-        if (initial) setLoading(true);
-        const res = await fetch('/api/settings', { cache: 'no-store' });
-        if (!res.ok) throw new Error('Gagal memuat info');
-        const data: ApiResponse<EventSettings> = await res.json();
-        if (data.success && data.data) setSettings(data.data);
-      } catch {
-        // pertahankan snapshot terakhir
-      } finally {
-        if (initial) setLoading(false);
-      }
-    };
-    load(true);
-    const id = setInterval(() => load(false), 30_000);
-    return () => clearInterval(id);
-  }, []);
-
-  if (loading && !settings) {
+  if (!settings && !online) {
     return (
       <div className="wrap pt-12">
         <div className="h-10 w-2/3 rounded-full bg-raise" />

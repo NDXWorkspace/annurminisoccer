@@ -2,22 +2,16 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import type { ApiResponse, EventSettings, MatchWithTeams } from '@/lib/types';
-import { SEED_MATCHES, SEED_SETTINGS } from '@/lib/seed';
 import { formatShortDate, formatTime, todayWIB } from '@/lib/utils';
+import type { MatchWithTeams } from '@/lib/types';
 import { useCategory } from '@/hooks/useCategory';
+import { matchesStore, settingsStore, useResource } from '@/lib/live-store';
 import MatchRow from '@/components/MatchRow';
-import CategoryMark from '@/components/CategoryMark';
-import StatusBadge from '@/components/StatusBadge';
 import LiveCard from '@/components/LiveCard';
 import HeroSpotlight from '@/components/HeroSpotlight';
 import Reveal from '@/components/Reveal';
 import Countdown from '@/components/Countdown';
 import PitchGraphic from '@/components/PitchGraphic';
-
-function stamp(date: Date): string {
-  return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-}
 
 function dayLabel(dateStr: string): string {
   const weekday = new Date(`${dateStr}T12:00:00`).toLocaleDateString('id-ID', {
@@ -28,40 +22,22 @@ function dayLabel(dateStr: string): string {
 }
 
 export default function BerandaPage() {
-  const [matches, setMatches] = useState<MatchWithTeams[]>(SEED_MATCHES);
-  const [settings, setSettings] = useState<EventSettings | null>(SEED_SETTINGS);
-  const [updatedAt, setUpdatedAt] = useState<string>('');
-  const [offline, setOffline] = useState(false);
+  // Beranda, ticker, jadwal, dan live semua membaca store yang sama,
+  // jadi angka di empat tempat itu dijamin identik.
+  const [matches, online, reloadMatches] = useResource(matchesStore);
+  const [settings] = useResource(settingsStore);
+  const [updatedAt, setUpdatedAt] = useState('');
   const [category, setCategory] = useCategory();
 
+  // Stempel waktu ikut ter-refresh setiap data berubah, bukan setiap render.
   useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      try {
-        const [m, s] = await Promise.all([
-          fetch('/api/matches', { cache: 'no-store' }),
-          fetch('/api/settings', { cache: 'no-store' }),
-        ]);
-        const mData: ApiResponse<MatchWithTeams[]> = await m.json().catch(() => ({}));
-        const sData: ApiResponse<EventSettings> = await s.json().catch(() => ({}));
-        if (cancelled) return;
-        if (mData.success && mData.data) {
-          setMatches(mData.data);
-          setUpdatedAt(stamp(new Date()));
-          setOffline(false);
-        }
-        if (sData.success && sData.data) setSettings(sData.data);
-      } catch {
-        if (!cancelled) setOffline(true);
-      }
-    };
-    load();
-    const id = setInterval(load, 10_000);
-    return () => {
-      cancelled = true;
-      clearInterval(id);
-    };
-  }, []);
+    if (!online) return;
+    setUpdatedAt(new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }));
+  }, [matches, settings, online]);
+
+  const reload = () => {
+    void reloadMatches();
+  };
 
   const categories = useMemo(() => {
     const cats = [...new Set(matches.map((m) => m.category).filter(Boolean))] as string[];
@@ -143,7 +119,7 @@ export default function BerandaPage() {
         </div>
       </section>
 
-      {offline && (
+      {!online && (
         <div className="wrap pt-4">
           <div className="flex items-center justify-between gap-3 rounded-full border border-line bg-surface px-5 py-2.5">
             <p className="text-sm text-muted">Koneksi terputus. Menampilkan data terakhir.</p>

@@ -1,11 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import type { ApiResponse, GroupStandings, MatchWithTeams, Team } from '@/lib/types';
-import { calculateAllStandings, calculateStandings } from '@/lib/utils';
-import { SEED_TEAMS, SEED_MATCHES } from '@/lib/seed';
+import { calculateStandings } from '@/lib/utils';
 import { useCategory } from '@/hooks/useCategory';
+import { matchesStore, teamsStore, useResource } from '@/lib/live-store';
 
 const COLS: { key: string; label: string; title: string }[] = [
   { key: 'played', label: 'M', title: 'Main' },
@@ -15,42 +14,11 @@ const COLS: { key: string; label: string; title: string }[] = [
 ];
 
 export default function KlasemenPage() {
-  const [standings, setStandings] = useState<GroupStandings[]>(() =>
-    calculateAllStandings(SEED_TEAMS, SEED_MATCHES)
-  );
-  const [teams, setTeams] = useState<Team[]>(SEED_TEAMS);
-  const [matches, setMatches] = useState<MatchWithTeams[]>(SEED_MATCHES);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Klasemen dihitung dari store yang sama dengan halaman lain, jadi
+  // angka Poin di sini dijamin cocok dengan skor di Beranda dan Jadwal.
+  const [teams] = useResource(teamsStore);
+  const [matches, online, reload] = useResource(matchesStore);
   const [category, setCategory] = useCategory('U10');
-
-  useEffect(() => {
-    const load = async (initial = false) => {
-      try {
-        if (initial) setLoading(true);
-        const [teamsRes, matchesRes] = await Promise.all([
-          fetch('/api/teams', { cache: 'no-store' }),
-          fetch('/api/matches', { cache: 'no-store' }),
-        ]);
-        if (!teamsRes.ok || !matchesRes.ok) throw new Error('Gagal memuat klasemen');
-        const teamsData: ApiResponse<Team[]> = await teamsRes.json();
-        const matchesData: ApiResponse<MatchWithTeams[]> = await matchesRes.json();
-        if (teamsData.success && matchesData.success && teamsData.data && matchesData.data) {
-          setTeams(teamsData.data);
-          setMatches(matchesData.data);
-          setStandings(calculateAllStandings(teamsData.data, matchesData.data));
-        }
-        setError(null);
-      } catch {
-        if (initial) setError('Data tidak dapat dimuat.');
-      } finally {
-        if (initial) setLoading(false);
-      }
-    };
-    load(true);
-    const id = setInterval(() => load(false), 10_000);
-    return () => clearInterval(id);
-  }, []);
 
   const categories = useMemo(() => {
     const cats = [...new Set(teams.map((t) => t.category).filter(Boolean))] as string[];
@@ -61,18 +29,14 @@ export default function KlasemenPage() {
 
   // Hanya tim kategori aktif yang dihitung — dua kategori tidak pernah tercampur.
   const visible = useMemo(() => {
-    if (!activeCategory) return standings;
-    const teamIds = new Set(
-      teams.filter((t) => (t.category ?? 'U10') === activeCategory).map((t) => t.id)
-    );
-    const groupNames = [
-      ...new Set(teams.filter((t) => teamIds.has(t.id)).map((t) => t.group_name)),
-    ].sort();
+    if (!activeCategory) return [];
+    const scoped = teams.filter((t) => (t.category ?? 'U10') === activeCategory);
+    const groupNames = [...new Set(scoped.map((t) => t.group_name))].sort();
     return groupNames.map((g) => ({
       group_name: g,
-      rows: calculateStandings(teams.filter((t) => teamIds.has(t.id)), matches, g),
+      rows: calculateStandings(scoped, matches, g),
     }));
-  }, [standings, teams, matches, activeCategory]);
+  }, [teams, matches, activeCategory]);
 
   return (
     <div className="wrap pt-12">
@@ -98,10 +62,10 @@ export default function KlasemenPage() {
         )}
       </div>
 
-      {error && (
+      {!online && (
         <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-full border border-danger/40 bg-danger/10 px-5 py-3">
-          <p className="text-sm text-danger">{error}</p>
-          <button onClick={() => window.location.reload()} className="label text-text">
+          <p className="text-sm text-danger">Data tidak dapat dimuat.</p>
+          <button onClick={reload} className="label text-text">
             Coba lagi
           </button>
         </div>
@@ -214,7 +178,7 @@ export default function KlasemenPage() {
           </section>
         ))}
 
-        {visible.length === 0 && !loading && (
+        {visible.length === 0 && online && (
           <p className="py-8 text-muted">
             Klasemen muncul setelah pertandingan pertama selesai.
           </p>

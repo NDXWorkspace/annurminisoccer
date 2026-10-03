@@ -2,54 +2,22 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import type { ApiResponse, MatchWithTeams } from '@/lib/types';
-import { SEED_MATCHES } from '@/lib/seed';
 import MatchCard from '@/components/MatchCard';
 import EmptyState from '@/components/EmptyState';
-import CategoryMark from '@/components/CategoryMark';
-import StatusBadge from '@/components/StatusBadge';
 import LiveCard from '@/components/LiveCard';
+import { matchesStore, useResource } from '@/lib/live-store';
 
 export default function LivePage() {
-  const [matches, setMatches] = useState<MatchWithTeams[]>(SEED_MATCHES);
-  const [loading, setLoading] = useState(true);
-  const [lastUpdated, setLastUpdated] = useState<string>('');
-  const [offline, setOffline] = useState(false);
-
-  const load = async (initial = false) => {
-    try {
-      if (initial) setLoading(true);
-      const res = await fetch('/api/matches', { cache: 'no-store' });
-      if (!res.ok) throw new Error('Gagal memuat skor');
-      const data: ApiResponse<MatchWithTeams[]> = await res.json();
-      if (data.success && data.data) {
-        setMatches(data.data);
-        setLastUpdated(
-          new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
-        );
-        setOffline(false);
-      }
-    } catch {
-      setOffline(true);
-    } finally {
-      if (initial) setLoading(false);
-    }
-  };
+  // Store yang sama dengan beranda, jadwal, dan ticker — satu angka untuk semua.
+  const [matches, online, reload] = useResource(matchesStore);
+  const [lastUpdated, setLastUpdated] = useState('');
 
   useEffect(() => {
-    load(true);
-    const id = setInterval(() => {
-      if (!document.hidden) load();
-    }, 5000);
-    const onVisible = () => {
-      if (!document.hidden) load();
-    };
-    document.addEventListener('visibilitychange', onVisible);
-    return () => {
-      clearInterval(id);
-      document.removeEventListener('visibilitychange', onVisible);
-    };
-  }, []);
+    if (!online) return;
+    setLastUpdated(new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }));
+  }, [matches, online]);
+
+  const loading = matches.length === 0 && !online;
 
   const live = matches.filter((m) => m.status === 'live' || m.status === 'halftime');
   const done = matches
@@ -74,7 +42,7 @@ export default function LivePage() {
             {lastUpdated ? `Diperbarui ${lastUpdated}` : 'Memuat…'}
           </span>
           <button
-            onClick={() => load()}
+            onClick={reload}
             className="label rounded-full border border-line px-4 py-2.5 text-muted transition-colors hover:border-blue/50 hover:text-text"
           >
             Muat ulang
@@ -82,13 +50,13 @@ export default function LivePage() {
         </div>
       </div>
 
-      {offline && (
+      {!online && (
         <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-full border border-line bg-surface px-5 py-2.5">
           <p className="text-sm text-muted">
             Koneksi terputus. Menampilkan data terakhir
             {lastUpdated ? ` (${lastUpdated})` : ''}.
           </p>
-          <button onClick={() => load()} className="label text-blue">
+          <button onClick={reload} className="label text-blue">
             Muat ulang
           </button>
         </div>

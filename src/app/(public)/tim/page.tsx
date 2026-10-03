@@ -1,38 +1,18 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import Link from 'next/link';
-import type { ApiResponse, Team } from '@/lib/types';
-import { SEED_TEAMS_SORTED } from '@/lib/seed';
 import Monogram from '@/components/Monogram';
 import Reveal from '@/components/Reveal';
+import { teamsStore, useResource } from '@/lib/live-store';
 
 export default function TimPage() {
-  const [teams, setTeams] = useState<Team[]>(SEED_TEAMS_SORTED);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [allTeams, online, reload] = useResource(teamsStore);
 
-  useEffect(() => {
-    const load = async (initial = false) => {
-      try {
-        if (initial) setLoading(true);
-        const res = await fetch('/api/teams', { cache: 'no-store' });
-        if (!res.ok) throw new Error('Gagal memuat tim');
-        const data: ApiResponse<Team[]> = await res.json();
-        if (data.success && data.data) {
-          setTeams([...data.data].sort((a, b) => a.name.localeCompare(b.name)));
-        }
-        setError(null);
-      } catch {
-        if (initial) setError('Data tidak dapat dimuat.');
-      } finally {
-        if (initial) setLoading(false);
-      }
-    };
-    load(true);
-    const id = setInterval(() => load(false), 15_000);
-    return () => clearInterval(id);
-  }, []);
+  const teams = useMemo(
+    () => [...allTeams].sort((a, b) => a.name.localeCompare(b.name)),
+    [allTeams]
+  );
 
   const sections = useMemo(() => {
     const cats = [...new Set(teams.map((t) => t.category).filter(Boolean))] as string[];
@@ -52,10 +32,10 @@ export default function TimPage() {
         <p className="label text-muted">{teams.length} tim</p>
       </div>
 
-      {error && (
+      {!online && (
         <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-full border border-danger/40 bg-danger/10 px-5 py-3">
-          <p className="text-sm text-danger">{error}</p>
-          <button onClick={() => window.location.reload()} className="label text-text">
+          <p className="text-sm text-danger">Data tidak dapat dimuat.</p>
+          <button onClick={reload} className="label text-text">
             Coba lagi
           </button>
         </div>
@@ -93,7 +73,7 @@ export default function TimPage() {
           </section>
         ))}
 
-        {teams.length === 0 && !loading && (
+        {teams.length === 0 && online && (
           <p className="py-8 text-muted">Belum ada tim yang terdaftar.</p>
         )}
       </div>

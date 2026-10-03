@@ -1,45 +1,26 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { ApiResponse, MatchWithTeams } from '@/lib/types';
-import { SEED_MATCHES } from '@/lib/seed';
+import type { MatchWithTeams } from '@/lib/types';
 import MatchRow from '@/components/MatchRow';
 import EmptyState from '@/components/EmptyState';
+import { announceChangeEverywhere, matchesStore, useResource } from '@/lib/live-store';
 
 /** Papan skor lapangan: satu layar untuk wasit di dua lapangan. */
 export default function UpdateSkorPage() {
-  const [matches, setMatches] = useState<MatchWithTeams[]>(SEED_MATCHES);
+  // Papan wasit memakai store yang sama dengan halaman publik, jadi skor
+  // yang diketik di sini muncul seketika di semua tab.
+  const [matches, online, reload] = useResource(matchesStore);
   const [selectedField, setSelectedField] = useState<string>('all');
   const [lastUpdated, setLastUpdated] = useState('');
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
-  const [offline, setOffline] = useState(false);
 
-  const load = async () => {
-    try {
-      const res = await fetch('/api/matches', { cache: 'no-store' });
-      const data: ApiResponse<MatchWithTeams[]> = await res.json();
-      if (data.success && data.data) {
-        setMatches(data.data);
-        setLastUpdated(
-          new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
-        );
-        setOffline(false);
-      }
-    } catch {
-      setOffline(true);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const loading = matches.length === 0 && !online;
 
   useEffect(() => {
-    load();
-    const id = setInterval(() => {
-      if (!document.hidden) load();
-    }, 3000);
-    return () => clearInterval(id);
-  }, []);
+    if (!online) return;
+    setLastUpdated(new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }));
+  }, [matches, online]);
 
   const fields = [...new Set(matches.map((m) => m.field).filter(Boolean))] as string[];
 
@@ -51,14 +32,17 @@ export default function UpdateSkorPage() {
   const update = async (m: MatchWithTeams, body: Record<string, unknown>) => {
     try {
       setSaving(m.id);
-      await fetch(`/api/updateskor?id=${m.id}`, {
+      const res = await fetch(`/api/updateskor?id=${m.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
-      load();
+      if (!res.ok) throw new Error();
+      // Segarkan store lokal lalu siarkan ke semua tab terbuka.
+      await matchesStore.refresh();
+      announceChangeEverywhere();
     } catch {
-      setOffline(true);
+      reload();
     } finally {
       setSaving(null);
     }
@@ -107,7 +91,7 @@ export default function UpdateSkorPage() {
         </div>
       </header>
 
-      {offline && (
+      {!online && (
         <div className="wrap pt-3">
           <p className="rounded-full border border-line bg-surface px-5 py-2 text-sm text-muted">
             Koneksi terputus. Menampilkan data terakhir.

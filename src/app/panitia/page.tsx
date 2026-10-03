@@ -1,8 +1,13 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import type { MatchWithTeams } from '@/lib/types';
 import { formatTime, todayWIB } from '@/lib/utils';
+import {
+  announceChangeEverywhere,
+  matchesStore,
+  useResource,
+} from '@/lib/live-store';
 import CategoryMark from '@/components/CategoryMark';
 import StatusBadge from '@/components/StatusBadge';
 
@@ -21,45 +26,20 @@ interface UndoState {
 }
 
 export default function SkorTab() {
-  const [matches, setMatches] = useState<MatchWithTeams[]>([]);
+  // Committee membaca store yang sama dengan halaman publik.Skor yang diinput
+  //langsung terlihat di semua tab tanpa menunggu polling.
+  const [matches, online, reload] = useResource(matchesStore);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filter, setFilter] = useState('Semua');
-  const [isLoading, setIsLoading] = useState(true);
   const [saveState, setSaveState] = useState<{ kind: 'idle' | 'saving' | 'saved' | 'error'; time: string }>({
     kind: 'idle',
     time: '',
   });
   const [undo, setUndo] = useState<UndoState | null>(null);
   const [lastChange, setLastChange] = useState<string>('');
-  const savingRef = useRef<string | null>(null);
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    return () => {
-      if (undoTimer.current) clearTimeout(undoTimer.current);
-    };
-  }, []);
-
-  const load = async (initial = false) => {
-    try {
-      if (initial) setIsLoading(true);
-      const res = await fetch('/api/matches', { cache: 'no-store' });
-      const data = await res.json().catch(() => ({}));
-      if (data.success && data.data && !savingRef.current) setMatches(data.data);
-    } catch {
-      // abaikan
-    } finally {
-      if (initial) setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    load(true);
-    const id = setInterval(() => {
-      if (!document.hidden) load();
-    }, 5000);
-    return () => clearInterval(id);
-  }, []);
+  const isLoading = matches.length === 0 && !online;
 
   const slotMatch = (field: string): MatchWithTeams | undefined => {
     const inField = matches.filter((m) => m.field === field);
@@ -96,9 +76,7 @@ export default function SkorTab() {
   };
 
   const push = async (id: string, body: Record<string, unknown>, undoable?: UndoState) => {
-    savingRef.current = id;
     setSaveState({ kind: 'saving', time: '' });
-    setMatches((cur) => cur.map((m) => (m.id === id ? { ...m, ...body } : m)));
     try {
       const res = await fetch(`/api/matches/${id}/score`, {
         method: 'PUT',
@@ -108,12 +86,13 @@ export default function SkorTab() {
       if (!res.ok) throw new Error();
       setSaveState({ kind: 'saved', time: stamp(new Date()) });
       if (undoable) showUndo(undoable);
-      await load();
+      // Segarkan store lokal lalu beritahukan SEMUA tab (publik dan panitia
+      // lain) supaya angka berubah seketika, bukan setelah giliran polling.
+      await matchesStore.refresh();
+      announceChangeEverywhere();
     } catch {
       setSaveState({ kind: 'error', time: '' });
-      await load();
-    } finally {
-      savingRef.current = null;
+      reload();
     }
   };
 
@@ -310,7 +289,7 @@ export default function SkorTab() {
               {saveState.kind === 'error' && (
                 <>
                   Gagal menyimpan.{' '}
-                  <button onClick={() => load()} className="text-blue underline">
+                  <button onClick={reload} className="text-blue underline">
                     Coba lagi
                   </button>
                 </>

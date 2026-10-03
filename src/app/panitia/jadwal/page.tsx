@@ -1,18 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import type { MatchWithTeams, Team, MatchFormData, MatchStage } from '@/lib/types';
+import { useState, useMemo } from 'react';
+import type { MatchWithTeams, MatchFormData, MatchStage } from '@/lib/types';
 import { formatShortDate, formatTime, todayWIB } from '@/lib/utils';
+import {
+  announceChangeEverywhere,
+  matchesStore,
+  teamsStore,
+  useResource,
+} from '@/lib/live-store';
 import CategoryMark from '@/components/CategoryMark';
 import StatusBadge from '@/components/StatusBadge';
 
 const fieldFor = (category: string) => (category === 'U12' ? '2' : '1');
 
 export default function JadwalPanitia() {
-  const [matches, setMatches] = useState<MatchWithTeams[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  // Sebelumnya halaman ini hanya memuat SEKALI saat dibuka. Kalaucommittee
+  // mengubah jadwal dari perangkat lain, daftar di sini tidak pernah bergerak.
+  const [allMatches, online, reload] = useResource(matchesStore);
+  const [teams] = useResource(teamsStore);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingMatch, setDeletingMatch] = useState<MatchWithTeams | null>(null);
@@ -30,38 +36,16 @@ export default function JadwalPanitia() {
     category: 'U10',
   });
 
-  const load = async () => {
-    try {
-      const [teamsRes, matchesRes] = await Promise.all([
-        fetch('/api/teams', { cache: 'no-store' }),
-        fetch('/api/matches', { cache: 'no-store' }),
-      ]);
-      const teamsData = await teamsRes.json().catch(() => ({}));
-      const matchesData = await matchesRes.json().catch(() => ({}));
-      if (!teamsRes.ok || !matchesRes.ok || !teamsData.success || !matchesData.success) {
-        setLoadError(teamsData.error || matchesData.error || 'Gagal memuat data.');
-        return;
-      }
-      if (teamsData.data) setTeams(teamsData.data);
-      if (matchesData.data) {
-        setMatches(
-          (matchesData.data as MatchWithTeams[]).sort((a, b) => {
-            if (a.match_date !== b.match_date) return a.match_date.localeCompare(b.match_date);
-            return (a.kickoff_time || '').localeCompare(b.kickoff_time || '');
-          })
-        );
-      }
-      setLoadError(null);
-    } catch {
-      setLoadError('Gagal memuat data.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const matches = useMemo(
+    () =>
+      [...allMatches].sort((a, b) => {
+        if (a.match_date !== b.match_date) return a.match_date.localeCompare(b.match_date);
+        return (a.kickoff_time || '').localeCompare(b.kickoff_time || '');
+      }),
+    [allMatches]
+  );
 
-  useEffect(() => {
-    void load();
-  }, []);
+  const isLoading = allMatches.length === 0 && !online;
 
   const categoryTeams = teams.filter((t) => (t.category ?? 'U10') === formData.category);
 
@@ -92,7 +76,8 @@ export default function JadwalPanitia() {
       });
       if (res.ok) {
         closeForm();
-        load();
+        void matchesStore.refresh();
+        announceChangeEverywhere();
         setMessage({
           type: 'success',
           text: editingId ? 'Jadwal berhasil diperbarui.' : 'Jadwal berhasil ditambahkan.',
@@ -113,7 +98,8 @@ export default function JadwalPanitia() {
       const res = await fetch(`/api/matches/${deletingMatch.id}`, { method: 'DELETE' });
       if (res.ok) {
         setDeletingMatch(null);
-        load();
+        void matchesStore.refresh();
+        announceChangeEverywhere();
         setMessage({ type: 'success', text: 'Pertandingan berhasil dihapus.' });
       } else {
         const err = await res.json().catch(() => ({}));
@@ -180,10 +166,10 @@ export default function JadwalPanitia() {
 
   return (
     <div className="space-y-6">
-      {loadError && (
+      {!online && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-full border border-danger/40 bg-danger/10 px-5 py-3">
-          <p className="text-sm text-danger">{loadError}</p>
-          <button onClick={() => load()} className="label text-text">
+          <p className="text-sm text-danger">Data tidak dapat dimuat.</p>
+          <button onClick={reload} className="label text-text">
             Coba lagi
           </button>
         </div>

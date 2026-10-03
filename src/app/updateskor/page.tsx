@@ -192,7 +192,7 @@ export default function UpdateSkorPage() {
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-3 h-3 bg-red-500 animate-pulse"></div>
                   <h2 className="text-xl font-black uppercase tracking-widest text-zinc-400" style={{ fontFamily: '"Courier New", monospace' }}>
-                    /// LAPANGAN {field}
+                    {'/// LAPANGAN '}{field}
                   </h2>
                   <div className="flex-1 h-px bg-zinc-800"></div>
                   <span className="text-zinc-600 font-mono text-sm">{fieldMatches.length} MATCH</span>

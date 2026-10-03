@@ -113,6 +113,13 @@ export default function BerandaPage() {
     const start = settings?.start_date || '2026-10-09';
     const end = settings?.end_date || '2026-10-10';
     if (start === end) return formatShortDate(start);
+    const [sy, sm] = start.split('-');
+    const [ey, em, ed] = end.split('-');
+    const sd = String(Number(start.split('-')[2]));
+    if (sy === ey && sm === em) {
+      const monthYear = formatShortDate(end).split(' ').slice(1).join(' ');
+      return `${sd}–${ed} ${monthYear}`;
+    }
     return `${formatShortDate(start)}–${formatShortDate(end)}`;
   })();
   const location = settings?.location || 'Lapangan An-Nur';

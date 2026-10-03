@@ -51,6 +51,36 @@ export async function GET(request: Request) {
       query = query.eq('group_name', group);
     }
 
+    // Lazy auto-start (pengganti Vercel Cron yang diblokir di paket Hobby):
+    // promosikan scheduled -> live bila kickoff (WIB = UTC+7) sudah lewat.
+    // Best-effort: kegagalan tidak boleh menggagalkan GET.
+    try {
+      if (isServiceRoleConfigured()) {
+        const now = new Date();
+        const admin = getServiceSupabase();
+        const { data: scheduled } = await admin
+          .from('matches')
+          .select('id, match_date, kickoff_time')
+          .eq('status', 'scheduled')
+          .limit(200);
+        const dueIds = (scheduled ?? [])
+          .filter((m) => {
+            if (!m.match_date || !m.kickoff_time) return false;
+            const kickoff = new Date(`${m.match_date}T${m.kickoff_time}+07:00`);
+            return !Number.isNaN(kickoff.getTime()) && kickoff.getTime() <= now.getTime();
+          })
+          .map((m) => m.id);
+        if (dueIds.length > 0) {
+          await admin
+            .from('matches')
+            .update({ status: 'live', updated_at: now.toISOString() })
+            .in('id', dueIds);
+        }
+      }
+    } catch {
+      // Abaikan: auto-start tidak boleh merusak respons baca.
+    }
+
     const { data, error } = await query;
       
     if (error) {

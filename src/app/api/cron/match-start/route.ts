@@ -2,10 +2,14 @@ import { NextResponse } from 'next/server';
 import { getServiceSupabase, isServiceRoleConfigured, SUPABASE_MISSING_SERVICE_KEY_MESSAGE } from '@/lib/supabase';
 
 /**
- * Cron endpoint (Vercel Cron) — otomatis set status 'live' untuk pertandingan
- * yang tanggal + jam tendangnya sudah tercapai (zona WIB = UTC+7).
+ * Endpoint pemicu manual/opsional — otomatis set status 'live' untuk
+ * pertandingan yang tanggal + jam tendangnya sudah tercapai (zona WIB = UTC+7).
  *
- * Dipanggil setiap menit oleh vercel.json. Aman: dijaga oleh CRON_SECRET.
+ * Catatan: Vercel Cron per-menit diblokir di paket Hobby, jadi auto-start utama
+ * berjalan oportunistik di GET /api/matches. Endpoint ini tetap ada untuk
+ * pemicu manual (mis. `curl`) atau cron eksternal.
+ *
+ * Aman: dijaga oleh CRON_SECRET bila diset.
  */
 export async function GET(request: Request) {
   try {

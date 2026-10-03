@@ -3,6 +3,7 @@ import type { MatchWithTeams } from '@/lib/types';
 import { formatTime } from '@/lib/utils';
 import Monogram from './Monogram';
 import ScorePair from './ScoreValue';
+import Reveal from './Reveal';
 import CategoryMark from './CategoryMark';
 import StatusBadge from './StatusBadge';
 
@@ -14,10 +15,12 @@ export default function MatchRow({
   match,
   code,
   showCategory = true,
+  index = 0,
 }: {
   match: MatchWithTeams;
   code: string;
   showCategory?: boolean;
+  index?: number;
 }) {
   const a = match.team_a;
   const b = match.team_b;
@@ -40,10 +43,12 @@ export default function MatchRow({
   }
 
   return (
-    <article
-      className={`mb-2.5 overflow-hidden rounded-[26px] border transition-colors duration-300 ${
+    <Reveal
+      as="article"
+      index={index}
+      className={`row group mb-2.5 rounded-[26px] border ${
         isLive
-          ? 'border-yellow/35 bg-gradient-to-r from-yellow/10 to-blue/5'
+          ? 'row-live border-yellow/35 bg-gradient-to-r from-yellow/10 to-blue/5'
           : 'border-line bg-white/[0.025] hover:border-blue/35 hover:bg-blue/[0.07]'
       }`}
     >
@@ -95,6 +100,6 @@ export default function MatchRow({
           </div>
         </div>
       </div>
-    </article>
+    </Reveal>
   );
 }

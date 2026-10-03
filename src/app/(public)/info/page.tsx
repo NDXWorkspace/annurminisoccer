@@ -5,6 +5,7 @@ import Link from 'next/link';
 import type { ApiResponse, EventSettings } from '@/lib/types';
 import { formatDate } from '@/lib/utils';
 import { SEED_SETTINGS } from '@/lib/seed';
+import Reveal from '@/components/Reveal';
 
 const DEFAULT_RULES = [
   'Sistem pertandingan menggunakan babak penyisihan grup dilanjutkan fase gugur (semifinal dan final).',
@@ -72,9 +73,9 @@ export default function InfoPage() {
 
   return (
     <div className="wrap pt-12 pb-8">
-      <h1 className="rule-title font-display text-[30px] font-extrabold md:text-[46px]">
+      <Reveal as="h1" className="rule-title font-display text-[30px] font-extrabold md:text-[46px]">
         {settings?.event_name || 'An-Nur Mini Soccer'}
-      </h1>
+      </Reveal>
 
       <dl className="mt-6 overflow-hidden rounded-[28px] border border-line bg-surface">
         {facts.map((f) => (

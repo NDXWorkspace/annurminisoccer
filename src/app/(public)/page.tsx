@@ -10,6 +10,8 @@ import MatchRow from '@/components/MatchRow';
 import CategoryMark from '@/components/CategoryMark';
 import StatusBadge from '@/components/StatusBadge';
 import LiveCard from '@/components/LiveCard';
+import HeroSpotlight from '@/components/HeroSpotlight';
+import Reveal from '@/components/Reveal';
 import Countdown from '@/components/Countdown';
 import PitchGraphic from '@/components/PitchGraphic';
 
@@ -117,7 +119,8 @@ export default function BerandaPage() {
   return (
     <>
       {/* ============ HERO papan skor ============ */}
-      <section className="relative -mt-[76px] overflow-hidden rounded-b-[44px] border-b border-line pb-7 pt-[150px]">
+      <section className="hero relative -mt-[76px] overflow-hidden rounded-b-[44px] border-b border-line pb-7 pt-[150px]">
+        <HeroSpotlight />
         <PitchGraphic />
         <div className="wrap relative z-10">
           <h1 className="num text-[clamp(54px,15.5vw,132px)] leading-none">
@@ -128,10 +131,12 @@ export default function BerandaPage() {
               <b>{sameMonth ? monthYear.split(' ')[1] : formatShortDate(start).split(' ')[1]}</b>
             </span>
           </h1>
-          <p className="mt-4 max-w-[42ch] text-base leading-relaxed text-muted">
+          <p className="fade-sub mt-4 max-w-[42ch] text-base leading-relaxed text-muted">
             Turnamen mini soccer An-Nur. Jadwal dan skor diperbarui langsung oleh panitia.
           </p>
-          <Countdown target={`${start}T09:00:00+07:00`} />
+          <div className="fade-cd">
+            <Countdown target={`${start}T09:00:00+07:00`} />
+          </div>
           {updatedAt && (
             <p className="label mt-4 text-muted/70">Diperbarui {updatedAt}</p>
           )}
@@ -152,9 +157,7 @@ export default function BerandaPage() {
       {/* ============ SEDANG BERLANGSUNG ============ */}
       {live.length > 0 && (
         <section aria-label="Sedang berlangsung" className="pt-12">
-          <h2 className="rule-title font-display text-[30px] font-extrabold md:text-[46px]">
-            Sedang berlangsung
-          </h2>
+          <Reveal as="h2" className="rule-title font-display text-[30px] font-extrabold md:text-[46px]">Sedang berlangsung</Reveal>
           <div className="mt-5 grid gap-4 md:grid-cols-2">
             {live.map((m, i) => (
               <LiveCard key={m.id} match={m} index={i} />
@@ -166,9 +169,7 @@ export default function BerandaPage() {
       {/* ============ JADWAL ============ */}
       <section aria-label="Jadwal pertandingan" className="pt-12">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="rule-title font-display text-[30px] font-extrabold md:text-[46px]">
-            Jadwal
-          </h2>
+          <Reveal as="h2" className="rule-title font-display text-[30px] font-extrabold md:text-[46px]">Jadwal</Reveal>
           {categories.length > 0 && (
             <CategoryFilter
               categories={categories}
@@ -211,7 +212,7 @@ export default function BerandaPage() {
                 {activeCategory === 'Semua' && list.length > 1 && (
                   <div className="flex items-center gap-3.5 pb-3 pt-6">
                     <span className="num text-[28px]">{formatTime(time)}</span>
-                    <span className="h-1.5 w-1.5 flex-none rounded-full bg-blue" aria-hidden />
+                    <span className="slot-dot flex-none" aria-hidden />
                     <span className="h-px flex-1 bg-gradient-to-r from-line to-transparent" aria-hidden />
                   </div>
                 )}

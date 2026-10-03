@@ -6,6 +6,7 @@ import { formatShortDate, formatTime } from '@/lib/utils';
 import { SEED_MATCHES } from '@/lib/seed';
 import { useCategory } from '@/hooks/useCategory';
 import MatchRow from '@/components/MatchRow';
+import Reveal from '@/components/Reveal';
 
 const STAGE_LABEL: Record<string, string> = {
   grup: 'Grup',
@@ -95,9 +96,9 @@ export default function JadwalPage() {
   return (
     <div className="wrap pt-12 pb-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="rule-title font-display text-[30px] font-extrabold md:text-[46px]">
+        <Reveal as="h1" className="rule-title font-display text-[30px] font-extrabold md:text-[46px]">
           Jadwal
-        </h1>
+        </Reveal>
         {categories.length > 0 && (
           <div className="pill gap-0.5 p-1" role="group" aria-label="Kategori">
             {['Semua', ...categories].map((c) => (
@@ -200,7 +201,7 @@ export default function JadwalPage() {
                 {activeCategory === 'Semua' && list.length > 1 && (
                   <div className="flex items-center gap-3.5 pb-3 pt-6">
                     <span className="num text-[28px]">{formatTime(t)}</span>
-                    <span className="h-1.5 w-1.5 flex-none rounded-full bg-blue" aria-hidden />
+                    <span className="slot-dot flex-none" aria-hidden />
                     <span
                       className="h-px flex-1 bg-gradient-to-r from-line to-transparent"
                       aria-hidden

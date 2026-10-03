@@ -194,7 +194,75 @@
     background: rgba(255, 255, 255, 0.04);
     font-family: var(--font-display);
     font-weight: 800;
-    transition: background 0.25s, border-color 0.25s, color 0.25s;
+    transition:
+      transform 0.6s var(--ease-out),
+      background 0.3s,
+      color 0.3s,
+      border-color 0.3s;
+  }
+  /* Monogram berputar saat disentuh — penanda tim yang sedang dibaca. */
+  .group:hover .mono-badge,
+  .row:hover .mono-badge {
+    transform: rotateY(360deg);
+    background: var(--color-blue);
+    border-color: var(--color-blue);
+    color: #fff;
+  }
+
+  /* Baris pertandingan: terangkat 2px dan garis kiri keluar. */
+  .row {
+    position: relative;
+    overflow: hidden;
+    transition:
+      transform 0.4s var(--ease-out),
+      background 0.3s,
+      border-color 0.3s;
+  }
+  .row::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 24%;
+    bottom: 24%;
+    width: 4px;
+    border-radius: 0 4px 4px 0;
+    background: var(--color-blue);
+    transform: scaleY(0);
+    transition: transform 0.4s var(--ease-out);
+  }
+  .row:hover {
+    transform: translateY(-2px);
+  }
+  .row:hover::before {
+    transform: scaleY(1);
+  }
+  .row-live::before {
+    background: var(--color-yellow);
+    transform: scaleY(1);
+  }
+
+  /* Kartu tim: terangkat 5px, tepi biru, bayangan lembut. */
+  .team-card {
+    transition:
+      transform 0.5s var(--ease-out),
+      border-color 0.3s,
+      box-shadow 0.4s;
+  }
+  .team-card:hover {
+    transform: translateY(-5px);
+    border-color: rgb(91 141 255 / 0.5);
+    box-shadow: 0 18px 40px -18px rgb(70 120 255 / 0.3);
+  }
+
+  /* Penanda jam: titik biru dengan halo. */
+  .slot-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    background: var(--color-blue);
+    box-shadow:
+      0 0 0 5px rgb(91 141 255 / 0.18),
+      0 0 18px var(--color-blue);
   }
 
   /* ---- Skor: garis bawah kuning sesaat saat berubah ---- */
@@ -245,6 +313,46 @@
   animation: dot 1.6s ease-in-out infinite;
 }
 
+/* 1b. Menyala redup — untuk sub-judul dan hitung mundur saat halaman dibuka. */
+@keyframes fade {
+  to {
+    opacity: 1;
+  }
+}
+.fade-sub {
+  opacity: 0;
+  animation: fade var(--dur-reveal) 0.7s var(--ease-out) forwards;
+}
+.fade-cd {
+  opacity: 0;
+  animation: fade var(--dur-reveal) 0.95s var(--ease-out) forwards;
+}
+
+/* 1c. Muncul saat elemen masuk viewport, bukan saat halaman dimuat.
+       Ini yang membuat halaman terasa "hidup" saat digulir. */
+.rv {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity var(--dur-reveal) var(--ease-out),
+    transform var(--dur-reveal) var(--ease-out);
+  transition-delay: calc(var(--i, 0) * 80ms);
+}
+.rv.rv-on {
+  opacity: 1;
+  transform: none;
+}
+
+/* 1d. Cincin kuning melebar — denyut gol di kartu LIVE. */
+@keyframes goal {
+  100% {
+    box-shadow: 0 0 0 34px rgb(245 196 0 / 0);
+  }
+}
+.goal-pulse {
+  animation: goal 0.9s var(--ease-out);
+}
+
 /* 2. Angka bertukar — sekali jalan, hanya saat nilainya berubah. */
 @keyframes flip {
   from {
@@ -264,7 +372,7 @@
 /* 3. Garis bawah kuning — penanda "angka ini baru berubah". */
 @keyframes flash {
   0%,
-  70% {
+  75% {
     opacity: 1;
   }
   100% {
@@ -272,7 +380,7 @@
   }
 }
 .animate-flash::after {
-  animation: flash 1.2s var(--ease-out) forwards;
+  animation: flash 1.6s var(--ease-out) forwards;
 }
 
 /* 4. Muncul berurutan — sekali jalan, stagger 60ms. */
@@ -301,6 +409,44 @@
   stroke-dasharray: 1600;
   stroke-dashoffset: 1600;
   animation: draw 2.4s 0.2s var(--ease-out) forwards;
+}
+
+/* 5b. Bola menyusuri lintasan — pengisi ruang kosong hero. */
+@keyframes fly {
+  0% {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  70% {
+    offset-distance: 100%;
+    opacity: 1;
+  }
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}
+.animate-ball {
+  offset-path: path("M60 420 C 200 120, 380 80, 520 300");
+  offset-distance: 0%;
+  animation: fly 4.5s 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* 5c. Progres gulir di tepi atas. */
+#prog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 60;
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+  background: linear-gradient(90deg, var(--color-blue), #7ae0ff);
+  border-radius: 0 3px 3px 0;
 }
 
 /* 6. Ticker berjalan — satu-satunya gerak loop yang informatif. */
@@ -375,6 +521,21 @@
     scroll-behavior: auto !important;
   }
   .hero-line b {
+    transform: none;
+  }
+  /* Konten yang punya animasi masuk harus tampil utuh saat gerak dimatikan. */
+  .fade-sub,
+  .fade-cd,
+  .rv {
+    opacity: 1;
+    transform: none;
+  }
+  .animate-ball {
+    animation: none;
+    opacity: 0;
+  }
+  .row:hover,
+  .team-card:hover {
     transform: none;
   }
   .animate-draw {

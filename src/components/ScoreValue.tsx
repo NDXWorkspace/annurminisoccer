@@ -5,28 +5,42 @@ import { useEffect, useRef, useState } from 'react';
 /**
  * Pasangan skor A–B yang tahu kapan berubahnya.
  *
- * Angka naik dari bawah dan garis bawah kuning muncul HANYA saat nilai
- * benar-benar berubah — bukan setiap render. `aria-label` dibacakan ulang
- * supaya pembaca layar hearsskor baru.
+ * Angka naik dari bawah, garis bawah kuning muncul, dan (kalau `onGoal`
+ * diisi) kartu indukmemberi denyut cincin kuning. Semuanya HANYA saat
+ * nilai benar-benar berubah — bukan setiap render.
  */
 export default function ScorePair({
   a,
   b,
   size = 'text-[34px]',
   label,
+  onGoal,
 }: {
   a: number;
   b: number;
   size?: string;
   label: string;
+  onGoal?: () => void;
 }) {
   const [flash, setFlash] = useState(0);
   const prev = useRef(`${a}-${b}`);
+  const first = useRef(true);
+  const cb = useRef(onGoal);
 
   useEffect(() => {
+    cb.current = onGoal;
+  }, [onGoal]);
+
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      prev.current = `${a}-${b}`;
+      return;
+    }
     if (prev.current !== `${a}-${b}`) {
       prev.current = `${a}-${b}`;
       setFlash((k) => k + 1);
+      cb.current?.();
     }
   }, [a, b]);
 

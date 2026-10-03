@@ -5,6 +5,7 @@ import Link from 'next/link';
 import type { ApiResponse, Team } from '@/lib/types';
 import { SEED_TEAMS_SORTED } from '@/lib/seed';
 import Monogram from '@/components/Monogram';
+import Reveal from '@/components/Reveal';
 
 export default function TimPage() {
   const [teams, setTeams] = useState<Team[]>(SEED_TEAMS_SORTED);
@@ -64,29 +65,29 @@ export default function TimPage() {
         {sections.map((s) => (
           <section key={s.title || 'all'} aria-label={s.title || 'Daftar tim'}>
             {s.title && (
-              <h2 className="rule-title font-display text-2xl font-extrabold">{s.title}</h2>
+              <Reveal as="h2" className="rule-title font-display text-2xl font-extrabold">{s.title}</Reveal>
             )}
             <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
               {s.list.map((team, i) => (
-                <Link
-                  key={team.id}
-                  href={`/tim/${team.id}`}
-                  style={{ ['--i' as string]: i }}
-                  className="animate-reveal group flex flex-col items-center gap-3 rounded-[28px] border border-line bg-gradient-to-bl from-raise to-ink p-5 text-center transition-colors duration-300 hover:border-blue/50"
-                >
-                  <Monogram
-                    name={team.name}
-                    shortName={team.short_name}
-                    color={team.color}
-                    size={56}
-                  />
-                  <span className="font-display text-[19px] font-bold leading-tight group-hover:text-blue">
-                    {team.name}
-                  </span>
-                  <span className="label text-muted">
-                    {team.group_name ? `Grup ${team.group_name}` : ''}
-                  </span>
-                </Link>
+                <Reveal as="article" key={team.id} index={i} className="team-card">
+                  <Link
+                    href={`/tim/${team.id}`}
+                    className="group flex flex-col items-center gap-3 rounded-[28px] border border-line bg-gradient-to-bl from-raise to-ink p-5 text-center hover:border-blue/50"
+                  >
+                    <Monogram
+                      name={team.name}
+                      shortName={team.short_name}
+                      color={team.color}
+                      size={56}
+                    />
+                    <span className="font-display text-[19px] font-bold leading-tight group-hover:text-blue">
+                      {team.name}
+                    </span>
+                    <span className="label text-muted">
+                      {team.group_name ? `Grup ${team.group_name}` : ''}
+                    </span>
+                  </Link>
+                </Reveal>
               ))}
             </div>
           </section>

@@ -19,6 +19,14 @@ export default function PitchGraphic() {
       <line className="animate-draw" x1={400} y1={0} x2={400} y2={520} />
       <rect className="animate-draw" x={400} y={130} width={230} height={260} />
       <rect className="animate-draw" x={400} y={190} width={100} height={140} />
+      {/* lintasan tipis + bola yang menyusurinya */}
+      <path
+        d="M60 420 C 200 120, 380 80, 520 300"
+        strokeDasharray="4 8"
+        opacity={0.5}
+        className="animate-draw"
+      />
+      <circle className="animate-ball" r={7} fill="#fff" stroke="none" />
     </svg>
   );
 }

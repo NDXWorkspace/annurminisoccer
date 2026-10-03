@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import BottomNav from '@/components/BottomNav';
 import MatchdayRail from '@/components/MatchdayRail';
+import ScrollProgress from '@/components/ScrollProgress';
 
 const NAV = [
   { name: 'Jadwal', path: '/' },
@@ -10,8 +11,10 @@ const NAV = [
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col bg-ink">
-      <header className="sticky top-[calc(env(safe-area-inset-top,0px)+10px)] z-40 mt-2.5">
+    <>
+      <ScrollProgress />
+      <div className="flex min-h-screen flex-col bg-ink">
+        <header className="sticky top-[calc(env(safe-area-inset-top,0px)+10px)] z-40 mt-2.5">
         <div className="wrap">
           <div className="flex h-14 items-center justify-between gap-3 rounded-full border border-line bg-surface/95 pl-5 pr-2.5 backdrop-blur-md">
             <Link href="/" className="flex items-center gap-2.5 whitespace-nowrap">
@@ -66,6 +69,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       </footer>
 
       <BottomNav />
-    </div>
+      </div>
+    </>
   );
 }

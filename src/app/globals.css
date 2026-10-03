@@ -6,6 +6,21 @@
    Struktur dari garis, bukan bayangan.
    ========================================================== */
 
+/* ------------------------------------------------------------
+   Sistem gerak. Satu aturan untuk semua halaman:
+   - gerak hanya saat data berubah, bukan saat halaman dibuka
+   - looping hanya untuk tiga hal: titik LIVE, bingkai LIVE, ticker
+   - sisanya sekali jalan
+   Durasi bersama supaya tidak ada yang "lebih lambat" diam-diam.
+   ------------------------------------------------------------ */
+:root {
+  --dur-fast: 160ms;
+  --dur-base: 300ms;
+  --dur-slow: 500ms;
+  --dur-reveal: 800ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
 @theme {
   --color-ink: #05070d;
   --color-surface: #0a0e18;
@@ -21,8 +36,6 @@
   --font-display: var(--font-bricolage), "Segoe UI", system-ui, sans-serif;
   --font-sans: var(--font-public-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, Menlo, monospace;
-
-  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 @property --a {
@@ -221,21 +234,21 @@
    Gerak — hanya untuk memberi tahu data berubah
    ========================================================== */
 
-/* Titik denyut: 1 gerakan per 1,6 detik */
-@keyframes pulse-dot {
+/* 1. Titik denyut — penanda LIVE saja. Satu gerakan per 1,6 detik. */
+@keyframes dot {
   50% {
     opacity: 0.25;
     transform: scale(0.6);
   }
 }
-.animate-pulse-dot {
-  animation: pulse-dot 1.6s ease-in-out infinite;
+.animate-dot {
+  animation: dot 1.6s ease-in-out infinite;
 }
 
-/* Angka naik dari bawah saat skor berubah */
-@keyframes tick {
+/* 2. Angka bertukar — sekali jalan, hanya saat nilainya berubah. */
+@keyframes flip {
   from {
-    transform: translateY(80%);
+    transform: translateY(70%);
     opacity: 0;
   }
   to {
@@ -243,23 +256,42 @@
     opacity: 1;
   }
 }
-.animate-tick {
+.animate-flip {
   display: block;
-  animation: tick 0.5s var(--ease-out);
+  animation: flip var(--dur-slow) var(--ease-out);
 }
 
-/* Garis bawah kuning 1,6 detik */
-@keyframes und {
+/* 3. Garis bawah kuning — penanda "angka ini baru berubah". */
+@keyframes flash {
   0%,
-  75% {
+  70% {
     opacity: 1;
   }
   100% {
     opacity: 0;
   }
 }
+.animate-flash::after {
+  animation: flash 1.2s var(--ease-out) forwards;
+}
 
-/* Garis lapangan tergambar sendiri */
+/* 4. Muncul berurutan — sekali jalan, stagger 60ms. */
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-reveal {
+  animation: reveal var(--dur-slow) var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 60ms);
+}
+
+/* 5. Garis lapangan tergambar — sekali jalan, hanya di hero. */
 @keyframes draw {
   to {
     stroke-dashoffset: 0;
@@ -271,7 +303,7 @@
   animation: draw 2.4s 0.2s var(--ease-out) forwards;
 }
 
-/* Ticker berjalan */
+/* 6. Ticker berjalan — satu-satunya gerak loop yang informatif. */
 @keyframes marquee {
   to {
     transform: translateX(-50%);
@@ -284,33 +316,31 @@
   animation-play-state: paused;
 }
 
-/* Bingkai LIVE berputar lambat */
-@keyframes spin {
+/* 7. Bingkai LIVE berputar — hanya pada kartu yang benar-benar live. */
+@keyframes halo {
   to {
     --a: 360deg;
   }
 }
-.animate-spin-slow {
-  animation: spin 5s linear infinite;
+.animate-halo::before {
+  animation: halo 5s linear infinite;
 }
 
-/* Muncul berurutan */
-@keyframes enter {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
+/* 8. Kerangka memuat — linear, tanpa kilau. */
+@keyframes skeleton {
+  0%,
+  100% {
+    opacity: 0.45;
   }
-  to {
-    opacity: 1;
-    transform: none;
+  50% {
+    opacity: 0.8;
   }
 }
-.animate-enter {
-  animation: enter 0.7s var(--ease-out) both;
-  animation-delay: calc(var(--i, 0) * 60ms);
+.animate-skeleton {
+  animation: skeleton 1.6s ease-in-out infinite;
 }
 
-/* Judul hero naik dari bawah pembungkus */
+/* 9. Judul hero naik dari bawah pembungkus — sekali jalan. */
 @keyframes rise {
   to {
     transform: none;
@@ -326,7 +356,7 @@
   font-weight: inherit;
   transform: translateY(110%) rotate(3deg);
   transform-origin: 0 100%;
-  animation: rise 1s var(--ease-out) forwards;
+  animation: rise var(--dur-reveal) var(--ease-out) forwards;
 }
 .hero-line:nth-child(2) b {
   animation-delay: 0.14s;

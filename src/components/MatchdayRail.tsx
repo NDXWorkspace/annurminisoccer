@@ -107,7 +107,7 @@ export default function MatchdayRail() {
               >
                 {isLive && (
                   <span
-                    className="mr-1.5 inline-block h-[7px] w-[7px] rounded-full bg-yellow animate-pulse-dot align-middle"
+                    className="mr-1.5 inline-block h-[7px] w-[7px] rounded-full bg-yellow animate-dot align-middle"
                     aria-hidden
                   />
                 )}

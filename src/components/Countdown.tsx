@@ -44,8 +44,10 @@ export default function Countdown({ target }: { target: string }) {
     >
       {LABELS.map((label, i) => (
         <div key={label} className="rounded-[22px] border border-line bg-surface px-4 py-3">
-          <span className="num block text-[34px] md:text-[52px]" suppressHydrationWarning>
-            {state.ready ? String(state.v[i]).padStart(2, '0') : '--'}
+          <span className="num block h-[1.1em] text-[34px] md:text-[52px]" suppressHydrationWarning>
+            <span key={state.ready ? String(state.v[i]) : '--'} className="animate-flip">
+              {state.ready ? String(state.v[i]).padStart(2, '0') : '--'}
+            </span>
           </span>
           <span className="label mt-1 block text-muted">{label}</span>
         </div>

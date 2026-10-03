@@ -9,6 +9,7 @@ import { useCategory } from '@/hooks/useCategory';
 import MatchRow from '@/components/MatchRow';
 import CategoryMark from '@/components/CategoryMark';
 import StatusBadge from '@/components/StatusBadge';
+import LiveCard from '@/components/LiveCard';
 import Countdown from '@/components/Countdown';
 import PitchGraphic from '@/components/PitchGraphic';
 
@@ -156,40 +157,7 @@ export default function BerandaPage() {
           </h2>
           <div className="mt-5 grid gap-4 md:grid-cols-2">
             {live.map((m, i) => (
-              <article
-                key={m.id}
-                style={{ ['--i' as string]: i }}
-                className="animate-enter relative isolate overflow-hidden rounded-[32px] bg-gradient-to-bl from-raise to-ink p-6 before:absolute before:inset-0 before:-z-10 before:rounded-[32px] before:p-[1.5px] before:bg-[conic-gradient(from_var(--a),transparent_0_60%,var(--color-yellow)_82%,transparent_100%)] before:[-webkit-mask:linear-gradient(#000_0_0)_content-box,linear-gradient(#000_0_0)] before:[mask-composite:exclude] before:[animation:spin_5s_linear_infinite]"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  {m.category ? (
-                    <CategoryMark category={m.category} field={m.field} />
-                  ) : (
-                    <span className="label text-muted">{m.field ? `Lapangan ${m.field}` : ''}</span>
-                  )}
-                  <StatusBadge status={m.status} />
-                </div>
-                <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                  <p className="truncate font-display text-[19px] font-bold leading-tight">
-                    {m.team_a?.name ?? 'Tim A'}
-                  </p>
-                  <p
-                    className="num flash flash-on flex items-center gap-2 text-[clamp(64px,18vw,112px)] leading-none"
-                    aria-live="polite"
-                    aria-label={`${m.team_a?.name ?? 'Tim A'} ${m.score_a ?? 0}, ${m.team_b?.name ?? 'Tim B'} ${m.score_b ?? 0}`}
-                  >
-                    {m.score_a ?? 0}
-                    <span className="font-medium text-muted">–</span>
-                    {m.score_b ?? 0}
-                  </p>
-                  <p className="truncate text-right font-display text-[19px] font-bold leading-tight">
-                    {m.team_b?.name ?? 'Tim B'}
-                  </p>
-                </div>
-                <p className="label mt-4 text-muted">
-                  {m.match_date} · {formatTime(m.kickoff_time)}
-                </p>
-              </article>
+              <LiveCard key={m.id} match={m} index={i} />
             ))}
           </div>
         </section>

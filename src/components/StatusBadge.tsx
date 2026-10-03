@@ -8,7 +8,7 @@ export default function StatusBadge({ status }: { status: MatchStatus }) {
   if (status === 'live') {
     return (
       <span className="label inline-flex h-[26px] items-center gap-2 rounded-full bg-yellow pl-2 pr-3 text-ink">
-        <span className="h-2 w-2 rounded-full bg-ink animate-pulse-dot" aria-hidden />
+        <span className="h-2 w-2 rounded-full bg-ink animate-dot" aria-hidden />
         Live
       </span>
     );

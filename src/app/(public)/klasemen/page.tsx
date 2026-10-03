@@ -166,7 +166,7 @@ export default function KlasemenPage() {
                     <tr
                       key={row.team.id}
                       style={{ ['--i' as string]: i }}
-                      className={`animate-enter border-b border-line transition-colors last:border-0 hover:bg-raise ${
+                      className={`animate-reveal border-b border-line transition-colors last:border-0 hover:bg-raise ${
                         i === 0 ? 'bg-[#0E1832]' : ''
                       }`}
                     >

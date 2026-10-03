@@ -119,15 +119,15 @@ export default function PengaturanPage() {
   };
 
   if (isLoading) {
-    return <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div></div>;
+    return <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-blue border-t-transparent rounded-full animate-spin"></div></div>;
   }
 
   if (!settings) {
     return (
       <div className="mx-auto max-w-lg py-10 text-center">
-        <div className="rounded-xl border border-red-200 bg-red-50 px-6 py-8">
-          <h2 className="text-lg font-semibold text-red-700">Gagal memuat pengaturan</h2>
-          <p className="mt-1.5 text-sm text-red-600">
+        <div className="rounded-[28px] border border-danger/40 bg-danger/10 px-6 py-8">
+          <h2 className="text-lg font-semibold text-danger">Gagal memuat pengaturan</h2>
+          <p className="mt-1.5 text-sm text-danger">
             {loadError ?? 'Respons dari server tidak berisi data acara.'}
           </p>
           <button
@@ -136,7 +136,7 @@ export default function PengaturanPage() {
               setLoadError(null);
               fetchSettings();
             }}
-            className="mt-5 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700"
+            className="mt-5 rounded-full bg-danger px-4 py-2 text-sm font-semibold text-white transition-colors hover:opacity-90"
           >
             Coba lagi
           </button>
@@ -148,7 +148,7 @@ export default function PengaturanPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {loadError && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-full border border-yellow/40 bg-yellow/10 px-4 py-3 text-sm text-yellow">
           <span>{loadError} Form di bawah menampilkan nilai bawaan — perubahan belum dapat disimpan.</span>
           <button
             onClick={() => {
@@ -156,7 +156,7 @@ export default function PengaturanPage() {
               setLoadError(null);
               fetchSettings();
             }}
-            className="rounded-md bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-amber-700"
+            className="rounded-full bg-yellow px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-amber-700"
           >
             Coba lagi
           </button>
@@ -164,100 +164,100 @@ export default function PengaturanPage() {
       )}
 
       {message && (
-        <div className={`p-4 rounded-lg font-medium ${message.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+        <div className={`p-4 rounded-full font-medium ${message.type === 'success' ? 'bg-blue/10 text-blue border border-blue/40' : 'bg-danger/10 text-danger border border-danger/40'}`}>
           {message.text}
         </div>
       )}
 
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Pengaturan Acara</h1>
+        <h1 className="text-2xl font-bold text-text">Pengaturan Acara</h1>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-surface rounded-[28px]  border border-line overflow-hidden">
         <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-700">Nama Acara</label>
+              <label className="block text-sm font-semibold text-text">Nama Acara</label>
               <input
                 type="text"
                 value={settings.event_name}
                 onChange={(e) => setSettings({...settings, event_name: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                className="w-full px-4 py-2 border border-line rounded-full focus:ring-2 focus:ring-primary focus:border-primary outline-none"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-700">Lokasi</label>
+              <label className="block text-sm font-semibold text-text">Lokasi</label>
               <input
                 type="text"
                 value={settings.location}
                 onChange={(e) => setSettings({...settings, location: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                className="w-full px-4 py-2 border border-line rounded-full focus:ring-2 focus:ring-primary focus:border-primary outline-none"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-700">Tanggal Mulai</label>
+              <label className="block text-sm font-semibold text-text">Tanggal Mulai</label>
               <input
                 type="date"
                 value={settings.start_date.slice(0, 10)}
                 onChange={(e) => setSettings({...settings, start_date: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                className="w-full px-4 py-2 border border-line rounded-full focus:ring-2 focus:ring-primary focus:border-primary outline-none"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-700">Tanggal Selesai</label>
+              <label className="block text-sm font-semibold text-text">Tanggal Selesai</label>
               <input
                 type="date"
                 value={settings.end_date.slice(0, 10)}
                 onChange={(e) => setSettings({...settings, end_date: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                className="w-full px-4 py-2 border border-line rounded-full focus:ring-2 focus:ring-primary focus:border-primary outline-none"
                 required
               />
             </div>
 
             <div className="space-y-2 md:col-span-2">
-              <label className="block text-sm font-semibold text-gray-700">URL Peta (Google Maps embed/link)</label>
+              <label className="block text-sm font-semibold text-text">URL Peta (Google Maps embed/link)</label>
               <input
                 type="url"
                 value={settings.map_url || ''}
                 onChange={(e) => setSettings({...settings, map_url: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                className="w-full px-4 py-2 border border-line rounded-full focus:ring-2 focus:ring-primary focus:border-primary outline-none"
                 placeholder="https://maps.google.com/..."
               />
             </div>
 
             <div className="space-y-2 md:col-span-2">
-              <label className="block text-sm font-semibold text-gray-700">Kontak Info (No HP / WhatsApp)</label>
+              <label className="block text-sm font-semibold text-text">Kontak Info (No HP / WhatsApp)</label>
               <input
                 type="text"
                 value={settings.contact_info || ''}
                 onChange={(e) => setSettings({...settings, contact_info: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                className="w-full px-4 py-2 border border-line rounded-full focus:ring-2 focus:ring-primary focus:border-primary outline-none"
                 placeholder="Contoh: 081234567890 (Panitia)"
               />
             </div>
 
             <div className="space-y-2 md:col-span-2">
-              <label className="block text-sm font-semibold text-gray-700">Aturan Main</label>
+              <label className="block text-sm font-semibold text-text">Aturan Main</label>
               <textarea
                 value={settings.rules_text || ''}
                 onChange={(e) => setSettings({...settings, rules_text: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none h-32"
+                className="w-full px-4 py-2 border border-line rounded-full focus:ring-2 focus:ring-primary focus:border-primary outline-none h-32"
                 placeholder="Detail aturan turnamen..."
               ></textarea>
             </div>
             
             <div className="space-y-2 md:col-span-2">
-              <label className="block text-sm font-semibold text-gray-700">Aturan Penentuan Klasemen (Tiebreak)</label>
+              <label className="block text-sm font-semibold text-text">Aturan Penentuan Klasemen (Tiebreak)</label>
               <textarea
                 value={settings.tiebreak_rules}
                 onChange={(e) => setSettings({...settings, tiebreak_rules: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none h-24"
+                className="w-full px-4 py-2 border border-line rounded-full focus:ring-2 focus:ring-primary focus:border-primary outline-none h-24"
                 placeholder="Contoh: 1. Poin, 2. Selisih Gol, 3. Produktivitas Gol"
                 required
               ></textarea>
@@ -268,7 +268,7 @@ export default function PengaturanPage() {
             <button
               type="submit"
               disabled={isSaving}
-              className="px-6 py-3 bg-primary hover:bg-primary-light text-white font-medium rounded-lg transition-colors flex items-center space-x-2 min-w-[140px] justify-center"
+              className="px-6 py-3 bg-blue hover:bg-blue-light text-white font-medium rounded-full transition-colors flex items-center space-x-2 min-w-[140px] justify-center"
             >
               {isSaving ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -283,10 +283,10 @@ export default function PengaturanPage() {
         </form>
       </div>
 
-      <div className="bg-red-50 rounded-xl border border-red-200 overflow-hidden mt-8">
+      <div className="bg-danger/10 rounded-[28px] border border-danger/40 overflow-hidden mt-8">
         <div className="p-6">
-          <h2 className="text-lg font-bold text-red-700 mb-2">Zona Berbahaya</h2>
-          <p className="text-sm text-red-600 mb-4">Mereset data akan menghapus semua tim dan jadwal pertandingan secara permanen. Tindakan ini tidak bisa dibatalkan.</p>
+          <h2 className="text-lg font-bold text-danger mb-2">Zona Berbahaya</h2>
+          <p className="text-sm text-danger mb-4">Mereset data akan menghapus semua tim dan jadwal pertandingan secara permanen. Tindakan ini tidak bisa dibatalkan.</p>
           
           {!showResetConfirm ? (
             <button 
@@ -294,26 +294,26 @@ export default function PengaturanPage() {
                 setShowResetConfirm(true);
                 setMessage(null);
               }}
-              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors text-sm"
+              className="px-4 py-2 bg-danger hover:opacity-90 text-white font-medium rounded-full transition-colors text-sm"
             >
               Reset Semua Data
             </button>
           ) : (
-            <div className="bg-white p-4 rounded-lg border border-red-300 inline-block w-full sm:w-auto">
-              <p className="font-bold text-gray-900 mb-2">Yakin ingin mereset semua data?</p>
-              <p className="text-sm text-gray-600 mb-3">Ketik <strong className="text-red-600 font-mono">RESET</strong> untuk mengonfirmasi.</p>
+            <div className="bg-surface p-4 rounded-full border border-red-300 inline-block w-full sm:w-auto">
+              <p className="font-bold text-text mb-2">Yakin ingin mereset semua data?</p>
+              <p className="text-sm text-text mb-3">Ketik <strong className="text-danger font-mono">RESET</strong> untuk mengonfirmasi.</p>
               <div className="flex items-center space-x-2">
                 <input 
                   type="text" 
                   value={resetCode}
                   onChange={(e) => setResetCode(e.target.value.toUpperCase())}
                   placeholder="RESET"
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 outline-none w-24 uppercase font-mono"
+                  className="px-3 py-2 border border-line rounded-full focus:ring-red-500 focus:border-red-500 outline-none w-24 uppercase font-mono"
                 />
                 <button 
                   onClick={handleReset}
                   disabled={resetCode !== 'RESET' || isResetting}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-medium rounded-md transition-colors"
+                  className="px-4 py-2 bg-danger hover:opacity-90 disabled:opacity-50 text-white font-medium rounded-full transition-colors"
                 >
                   {isResetting ? 'Mereset...' : 'Konfirmasi Reset'}
                 </button>
@@ -322,7 +322,7 @@ export default function PengaturanPage() {
                     setShowResetConfirm(false);
                     setResetCode('');
                   }}
-                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-md transition-colors"
+                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-full transition-colors"
                 >
                   Batal
                 </button>

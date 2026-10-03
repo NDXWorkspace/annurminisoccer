@@ -2,6 +2,7 @@ import type { MatchWithTeams } from '@/lib/types';
 import { formatTime } from '@/lib/utils';
 import Monogram from './Monogram';
 import StatusBadge from './StatusBadge';
+import ScorePair from './ScoreValue';
 import Link from 'next/link';
 
 /** Kartu ringkas untuk daftar hasil terbaru. */
@@ -37,11 +38,12 @@ export default function MatchCard({
         </Link>
         <Monogram name={match.team_a?.name ?? 'A'} shortName={match.team_a?.short_name} size={compact ? 32 : 40} />
         {showScore ? (
-          <p className="num flex items-center gap-1.5 text-3xl" aria-live="polite">
-            {match.score_a ?? 0}
-            <span className="font-medium text-muted">–</span>
-            {match.score_b ?? 0}
-          </p>
+          <ScorePair
+            a={match.score_a ?? 0}
+            b={match.score_b ?? 0}
+            size="text-3xl"
+            label={`${match.team_a?.name ?? 'Tim A'} ${match.score_a ?? 0}, ${match.team_b?.name ?? 'Tim B'} ${match.score_b ?? 0}`}
+          />
         ) : (
           <p className="num text-xl text-muted">vs</p>
         )}

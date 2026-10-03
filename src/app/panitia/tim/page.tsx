@@ -119,7 +119,7 @@ export default function TimPanitia() {
   };
 
   if (isLoading) {
-    return <div className="h-40 animate-pulse rounded-[28px] bg-raise" />;
+    return <div className="h-40 animate-skeleton rounded-[28px] bg-raise" />;
   }
 
   const input =

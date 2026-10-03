@@ -119,7 +119,7 @@ export default function UpdateSkorPage() {
         {loading ? (
           <div className="space-y-2.5">
             {[0, 1].map((i) => (
-              <div key={i} className="h-28 animate-pulse rounded-[26px] bg-raise" />
+              <div key={i} className="h-28 animate-skeleton rounded-[26px] bg-raise" />
             ))}
           </div>
         ) : shown.length === 0 ? (

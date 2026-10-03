@@ -30,6 +30,7 @@ export default function SkorTab() {
     time: '',
   });
   const [undo, setUndo] = useState<UndoState | null>(null);
+  const [lastChange, setLastChange] = useState<string>('');
   const savingRef = useRef<string | null>(null);
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -119,6 +120,7 @@ export default function SkorTab() {
   const changeScore = (m: MatchWithTeams, team: 'a' | 'b', delta: number) => {
     const next = team === 'a' ? m.score_a + delta : m.score_b + delta;
     if (next < 0 || next > 99) return;
+    const teamId = team === 'a' ? m.team_a_id : m.team_b_id;
     const body = team === 'a' ? { score_a: next } : { score_b: next };
     const undoable =
       delta < 0
@@ -127,6 +129,7 @@ export default function SkorTab() {
             snapshot: { score_a: m.score_a, score_b: m.score_b, status: m.status },
           }
         : undefined;
+    setLastChange(`${m.id}:${teamId}:${next}`);
     push(m.id, body, undoable);
   };
 
@@ -158,7 +161,7 @@ export default function SkorTab() {
 
   if (isLoading) {
     return (
-      <div className="h-40 animate-pulse rounded-[28px] bg-raise" />
+      <div className="h-40 animate-skeleton rounded-[28px] bg-raise" />
     );
   }
 
@@ -242,9 +245,17 @@ export default function SkorTab() {
                   <p className="line-clamp-2 min-h-[3.5rem] text-center font-display text-xl font-bold">
                     {team?.name ?? (side === 'a' ? 'Tim A' : 'Tim B')}
                   </p>
-                  <p className="num my-2 text-[96px] leading-none" aria-live="polite">
-                    {score}
-                  </p>
+                  <span className="relative my-2 block text-[96px] leading-none" aria-live="polite">
+                    <span key={score} className="num block animate-flip">
+                      {score}
+                    </span>
+                    {lastChange === `${selected.id}:${team?.id ?? ''}:${score}` && (
+                      <span
+                        aria-hidden
+                        className="animate-flash absolute inset-x-6 -bottom-1 h-1 rounded-full bg-yellow"
+                      />
+                    )}
+                  </span>
                   <div className="flex gap-3">
                     <button
                       onClick={() => changeScore(selected, side, -1)}

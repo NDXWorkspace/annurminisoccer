@@ -72,7 +72,7 @@ export default function TimPage() {
                   key={team.id}
                   href={`/tim/${team.id}`}
                   style={{ ['--i' as string]: i }}
-                  className="animate-enter group flex flex-col items-center gap-3 rounded-[28px] border border-line bg-gradient-to-bl from-raise to-ink p-5 text-center transition-colors duration-300 hover:border-blue/50"
+                  className="animate-reveal group flex flex-col items-center gap-3 rounded-[28px] border border-line bg-gradient-to-bl from-raise to-ink p-5 text-center transition-colors duration-300 hover:border-blue/50"
                 >
                   <Monogram
                     name={team.name}

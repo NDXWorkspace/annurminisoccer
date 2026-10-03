@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { MatchWithTeams } from '@/lib/types';
 import { formatTime } from '@/lib/utils';
 import Monogram from './Monogram';
+import ScorePair from './ScoreValue';
 import CategoryMark from './CategoryMark';
 import StatusBadge from './StatusBadge';
 
@@ -72,15 +73,11 @@ export default function MatchRow({
           </div>
 
           {isLive || isFinished ? (
-            <p
-              className="num flash flash-on flex items-center gap-2 text-[34px] text-text"
-              aria-live="polite"
-              aria-label={`${a?.name ?? 'Tim A'} ${scoreA}, ${b?.name ?? 'Tim B'} ${scoreB}`}
-            >
-              {scoreA}
-              <span className="font-medium text-muted">–</span>
-              {scoreB}
-            </p>
+            <ScorePair
+              a={scoreA}
+              b={scoreB}
+              label={`${a?.name ?? 'Tim A'} ${scoreA}, ${b?.name ?? 'Tim B'} ${scoreB}`}
+            />
           ) : (
             <p className="num text-xl font-semibold tracking-normal text-muted">vs</p>
           )}

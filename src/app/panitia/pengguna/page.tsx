@@ -102,33 +102,33 @@ export default function PenggunaPage() {
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-flood border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue border-t-transparent" />
       </div>
     );
   }
 
   return (
     <div className="mx-auto max-w-4xl">
-      <h1 className="mb-1 font-display text-3xl font-bold uppercase tracking-wide text-gray-900">Kelola Pengguna</h1>
-      <p className="mb-6 text-sm text-gray-500">Khusus superadmin. Buat, ubah role, nonaktifkan, atau hapus akun.</p>
+      <h1 className="mb-1 font-display text-3xl font-bold uppercase tracking-wide text-text">Kelola Pengguna</h1>
+      <p className="mb-6 text-sm text-muted">Khusus superadmin. Buat, ubah role, nonaktifkan, atau hapus akun.</p>
 
-      {error && <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800">{error}</p>}
+      {error && <p className="mb-4 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800">{error}</p>}
       {message && (
-        <p className={`mb-4 rounded-lg border px-4 py-2 text-sm ${message.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-red-200 bg-red-50 text-red-700'}`}>
+        <p className={`mb-4 rounded-full border px-4 py-2 text-sm ${message.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-danger/40 bg-danger/10 text-danger'}`}>
           {message.text}
         </p>
       )}
 
-      <form onSubmit={create} className="mb-8 grid gap-3 rounded-xl border border-gray-200 bg-white p-5 sm:grid-cols-4">
+      <form onSubmit={create} className="mb-8 grid gap-3 rounded-[28px] border border-line bg-surface p-5 sm:grid-cols-4">
         <input
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          className="rounded-full border border-line px-3 py-2 text-sm"
           placeholder="Username"
           value={form.username}
           onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))}
           autoComplete="off"
         />
         <input
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          className="rounded-full border border-line px-3 py-2 text-sm"
           type="password"
           placeholder="Password (min 8)"
           value={form.password}
@@ -136,7 +136,7 @@ export default function PenggunaPage() {
           autoComplete="new-password"
         />
         <select
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          className="rounded-full border border-line px-3 py-2 text-sm"
           value={form.role}
           onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
         >
@@ -146,16 +146,16 @@ export default function PenggunaPage() {
         <button
           type="submit"
           disabled={creating || !form.username.trim() || form.password.length < 8}
-          className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          className="rounded-full bg-blue px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
         >
           {creating ? 'Memproses…' : 'Tambah'}
         </button>
       </form>
 
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+      <div className="overflow-hidden rounded-[28px] border border-line bg-surface">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50">
-            <tr className="text-left text-gray-500">
+          <thead className="bg-surface">
+            <tr className="text-left text-muted">
               <th className="px-4 py-3 font-medium">Username</th>
               <th className="px-4 py-3 font-medium">Role</th>
               <th className="px-4 py-3 font-medium">Aktif</th>
@@ -166,29 +166,29 @@ export default function PenggunaPage() {
           <tbody>
             {users.map((u) => (
               <tr key={u.id} className="border-t border-gray-100">
-                <td className="px-4 py-3 font-medium text-gray-900">{u.username}</td>
+                <td className="px-4 py-3 font-medium text-text">{u.username}</td>
                 <td className="px-4 py-3">
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${u.role === 'superadmin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${u.role === 'superadmin' ? 'bg-blue/15 text-blue' : 'bg-blue/15 text-blue'}`}>
                     {u.role}
                   </span>
                 </td>
                 <td className="px-4 py-3">{u.active ? <span className="text-emerald-600">Ya</span> : <span className="text-red-500">Tidak</span>}</td>
-                <td className="px-4 py-3 text-gray-500">{u.created_at ? new Date(u.created_at).toLocaleDateString('id-ID') : '-'}</td>
+                <td className="px-4 py-3 text-muted">{u.created_at ? new Date(u.created_at).toLocaleDateString('id-ID') : '-'}</td>
                 <td className="px-4 py-3 text-right space-x-1">
-                  <button onClick={() => patch(u.id, u.role === 'superadmin' ? 'admin' : 'superadmin', u.active)} className="rounded-md border border-gray-200 px-2 py-1 text-xs hover:bg-gray-50">
+                  <button onClick={() => patch(u.id, u.role === 'superadmin' ? 'admin' : 'superadmin', u.active)} className="rounded-full border border-line px-2 py-1 text-xs hover:bg-surface">
                     Tukar role
                   </button>
-                  <button onClick={() => patch(u.id, u.role, !u.active)} className="rounded-md border border-gray-200 px-2 py-1 text-xs hover:bg-gray-50">
+                  <button onClick={() => patch(u.id, u.role, !u.active)} className="rounded-full border border-line px-2 py-1 text-xs hover:bg-surface">
                     {u.active ? 'Nonaktifkan' : 'Aktifkan'}
                   </button>
-                  <button onClick={() => remove(u.id, u.username)} className="rounded-md border border-red-200 px-2 py-1 text-xs text-red-600 hover:bg-red-50">
+                  <button onClick={() => remove(u.id, u.username)} className="rounded-full border border-danger/40 px-2 py-1 text-xs text-danger hover:bg-danger/10">
                     Hapus
                   </button>
                 </td>
               </tr>
             ))}
             {users.length === 0 && (
-              <tr><td className="px-4 py-6 text-center text-gray-400" colSpan={5}>Belum ada pengguna.</td></tr>
+              <tr><td className="px-4 py-6 text-center text-muted" colSpan={5}>Belum ada pengguna.</td></tr>
             )}
           </tbody>
         </table>

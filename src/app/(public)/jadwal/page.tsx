@@ -183,7 +183,7 @@ export default function JadwalPage() {
         {loading && groups.length === 0 ? (
           <div className="space-y-2.5">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="h-24 animate-pulse rounded-[26px] bg-raise" />
+              <div key={i} className="h-24 animate-skeleton rounded-[26px] bg-raise" />
             ))}
           </div>
         ) : groups.length === 0 ? (

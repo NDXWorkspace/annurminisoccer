@@ -141,6 +141,15 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       update.group_name =
         typeof body.group_name === 'string' && body.group_name.trim() ? body.group_name.trim() : null;
     }
+    if (body?.category !== undefined) {
+      const v = typeof body.category === 'string' ? body.category.trim().toUpperCase() : '';
+      if (v !== 'U10' && v !== 'U12') {
+        return NextResponse.json({ success: false, error: 'Kategori harus U10 atau U12.' }, { status: 400 });
+      }
+      // Kategori menentukan lapangan otomatis: U10 → Lapangan 1, U12 → Lapangan 2.
+      update.category = v;
+      update.field = v === 'U10' ? '1' : '2';
+    }
     if (body?.score_a !== undefined || body?.score_b !== undefined) {
       for (const k of ['score_a', 'score_b'] as const) {
         if (body?.[k] !== undefined) {
@@ -157,6 +166,32 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     }
 
     const adminSupabase = getServiceSupabase();
+
+    // Bila kategori atau tim berubah, pastikan kedua tim satu kategori
+    // dengan kategori efektif pertandingan.
+    if (update.category !== undefined || update.team_a_id !== undefined || update.team_b_id !== undefined) {
+      const { data: current } = await adminSupabase
+        .from('matches')
+        .select('team_a_id, team_b_id, category')
+        .eq('id', id)
+        .single();
+      if (current) {
+        const effCategory = (update.category as string) ?? current.category;
+        const teamA = (update.team_a_id as string) ?? current.team_a_id;
+        const teamB = (update.team_b_id as string) ?? current.team_b_id;
+        const { data: pair } = await adminSupabase
+          .from('teams')
+          .select('id, category')
+          .in('id', [teamA, teamB]);
+        if (!pair || pair.length !== 2 || pair.some((t) => t.category !== effCategory)) {
+          return NextResponse.json(
+            { success: false, error: `Kedua tim harus berkategori ${effCategory}.` },
+            { status: 400 }
+          );
+        }
+      }
+    }
+
     const { data, error } = await adminSupabase
       .from('matches')
       .update(update)

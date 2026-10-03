@@ -1,25 +1,27 @@
 import type { Metadata, Viewport } from "next";
-import { Barlow_Condensed, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
+import { Big_Shoulders, Public_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
-const barlow = Barlow_Condensed({
+// Catatan: "Big Shoulders Display" tidak ada di daftar next/font versi ini,
+// dipakai "Big Shoulders" (kerangka yang sama) sebagai pengganti setara.
+const bigShoulders = Big_Shoulders({
   subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
-  variable: "--font-barlow",
+  weight: ["700", "800", "900"],
+  variable: "--font-big-shoulders",
   display: "swap",
 });
 
-const jakarta = Plus_Jakarta_Sans({
+const publicSans = Public_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-jakarta",
+  weight: ["400", "500", "700"],
+  variable: "--font-public-sans",
   display: "swap",
 });
 
-const jetbrains = JetBrains_Mono({
+const plexMono = IBM_Plex_Mono({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-jetbrains",
+  weight: ["500"],
+  variable: "--font-plex-mono",
   display: "swap",
 });
 
@@ -29,12 +31,12 @@ export const metadata: Metadata = {
     template: "%s · An-Nur Mini Soccer",
   },
   description:
-    "Website resmi Turnamen Mini Soccer An-Nur. Jadwal, skor live, klasemen, dan profil tim peserta.",
+    "Turnamen mini soccer An-Nur, 9–10 Oktober 2026. Jadwal dan skor diperbarui langsung oleh panitia.",
   applicationName: "An-Nur Mini Soccer",
-  keywords: ["mini soccer", "turnamen", "An-Nur", "jadwal", "skor live"],
+  keywords: ["mini soccer", "turnamen", "An-Nur", "jadwal", "skor"],
   openGraph: {
     title: "An-Nur Mini Soccer",
-    description: "Website resmi Turnamen Mini Soccer An-Nur.",
+    description: "Turnamen mini soccer An-Nur, 9–10 Oktober 2026.",
     type: "website",
     locale: "id_ID",
   },
@@ -42,8 +44,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#060b16",
-  colorScheme: "dark",
+  themeColor: "#F5F7FA",
+  colorScheme: "light",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -57,7 +59,7 @@ export default function RootLayout({
   return (
     <html
       lang="id"
-      className={`${barlow.variable} ${jakarta.variable} ${jetbrains.variable} scroll-smooth`}
+      className={`${bigShoulders.variable} ${publicSans.variable} ${plexMono.variable}`}
     >
       <body className="font-sans antialiased">{children}</body>
     </html>

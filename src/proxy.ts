@@ -5,7 +5,7 @@ import { COOKIE_NAME, sessionSecretBytes } from './lib/session';
 
 const SESSION_SECRET = sessionSecretBytes();
 
-/** Samakan '/admin/login' dan '/admin/login/' supaya tidak terjebak guard. */
+/** Samakan '/panitia/masuk' dan '/panitia/masuk/' supaya tidak terjebak guard. */
 function normalise(pathname: string): string {
   return pathname.length > 1 && pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
 }
@@ -13,12 +13,12 @@ function normalise(pathname: string): string {
 export async function proxy(request: NextRequest) {
   const pathname = normalise(request.nextUrl.pathname);
 
-  // Protect /admin routes (except /admin/login)
-  if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
+  // Protect /panitia routes (except /panitia/masuk)
+  if (pathname.startsWith('/panitia') && pathname !== '/panitia/masuk') {
     const sessionCookie = request.cookies.get(COOKIE_NAME)?.value;
 
     if (!sessionCookie) {
-      const loginUrl = new URL('/admin/login', request.url);
+      const loginUrl = new URL('/panitia/masuk', request.url);
       loginUrl.searchParams.set('from', pathname);
       return NextResponse.redirect(loginUrl);
     }
@@ -26,7 +26,7 @@ export async function proxy(request: NextRequest) {
     try {
       await jwtVerify(sessionCookie, SESSION_SECRET);
     } catch {
-      const loginUrl = new URL('/admin/login', request.url);
+      const loginUrl = new URL('/panitia/masuk', request.url);
       loginUrl.searchParams.set('from', pathname);
       const response = NextResponse.redirect(loginUrl);
       // Delete corrupted/expired cookie
@@ -35,13 +35,13 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // If already logged in and visiting /admin/login, redirect to /admin dashboard
-  if (pathname === '/admin/login') {
+  // If already logged in and visiting /panitia/masuk, redirect to dashboard
+  if (pathname === '/panitia/masuk') {
     const sessionCookie = request.cookies.get(COOKIE_NAME)?.value;
     if (sessionCookie) {
       try {
         await jwtVerify(sessionCookie, SESSION_SECRET);
-        return NextResponse.redirect(new URL('/admin', request.url));
+        return NextResponse.redirect(new URL('/panitia', request.url));
       } catch {
         // Invalid session, let user stay on login
       }
@@ -52,5 +52,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: ['/panitia/:path*'],
 };

@@ -2,36 +2,28 @@ import Link from 'next/link';
 
 export default function NotFound() {
   return (
-    <div className="pitch-wash relative flex min-h-screen items-center justify-center overflow-hidden px-6">
-      <div className="relative text-center">
-        <span className="label-programme text-flood">Error 404</span>
-
-        <p className="score-plate mt-4 text-[7rem] leading-none text-chalk sm:text-[10rem]">
-          404
-        </p>
-
-        <div className="mx-auto mt-2 h-[2px] w-24 bg-flood" aria-hidden />
-
-        <h1 className="mt-6 font-display text-2xl font-bold uppercase tracking-[0.06em] text-chalk sm:text-3xl">
+    <div className="bg-paper px-4 py-16">
+      <div className="rule-double mx-auto max-w-[1080px] pt-6">
+        <p className="font-mono text-[13px] text-muted">Kesalahan 404</p>
+        <h1 className="mt-2 font-display text-5xl font-extrabold text-ink">
           Halaman tidak ditemukan
         </h1>
-        <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-chalk-dim">
-          Alamat yang Anda tuju tidak tersedia. Mungkin tautannya sudah berubah atau halamannya
-          dihapus.
+        <p className="mt-3 max-w-[65ch] text-muted">
+          Alamat yang Anda tuju tidak tersedia. Mungkin tautannya sudah berubah atau
+          halamannya dihapus.
         </p>
-
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+        <div className="mt-6 flex flex-wrap gap-3">
           <Link
             href="/"
-            className="rounded-lg bg-flood px-5 py-3 font-display text-sm font-bold uppercase tracking-[0.12em] text-ink transition-transform duration-200 hover:-translate-y-0.5"
+            className="inline-flex h-12 items-center rounded-[4px] bg-blue px-5 font-display text-base font-bold uppercase text-white"
           >
-            Kembali ke beranda
+            Kembali ke jadwal
           </Link>
           <Link
-            href="/jadwal"
-            className="rounded-lg border border-line-bright bg-ink-raised px-5 py-3 font-display text-sm font-bold uppercase tracking-[0.12em] text-chalk transition-colors hover:border-flood/50 hover:text-flood"
+            href="/klasemen"
+            className="inline-flex h-12 items-center rounded-[4px] border-[1.5px] border-ink px-5 font-display text-base font-bold uppercase text-ink"
           >
-            Lihat jadwal
+            Lihat klasemen
           </Link>
         </div>
       </div>

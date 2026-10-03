@@ -79,6 +79,13 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       if (!v) return NextResponse.json({ success: false, error: 'Grup wajib diisi.' }, { status: 400 });
       update.group_name = v;
     }
+    if (body?.category !== undefined) {
+      const v = typeof body.category === 'string' ? body.category.trim().toUpperCase() : '';
+      if (v !== 'U10' && v !== 'U12') {
+        return NextResponse.json({ success: false, error: 'Kategori harus U10 atau U12.' }, { status: 400 });
+      }
+      update.category = v;
+    }
     if (body?.logo_url !== undefined) {
       const v = typeof body.logo_url === 'string' ? body.logo_url.trim() : '';
       if (v) {

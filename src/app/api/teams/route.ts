@@ -62,9 +62,14 @@ export async function POST(request: Request) {
     const group_name = typeof body?.group_name === 'string' ? body.group_name.trim() : '';
     const logo_url = typeof body?.logo_url === 'string' && body.logo_url.trim() ? body.logo_url.trim() : null;
     const color = typeof body?.color === 'string' && body.color.trim() ? body.color.trim() : null;
+    const category = typeof body?.category === 'string' ? body.category.trim().toUpperCase() : '';
 
     if (!name || !short_name || !group_name) {
       return NextResponse.json({ success: false, error: 'Data tidak lengkap' }, { status: 400 });
+    }
+
+    if (category !== 'U10' && category !== 'U12') {
+      return NextResponse.json({ success: false, error: 'Kategori harus U10 atau U12.' }, { status: 400 });
     }
     
     if (short_name.length !== 3) {
@@ -89,7 +94,7 @@ export async function POST(request: Request) {
     const adminSupabase = getServiceSupabase();
     const { data, error } = await adminSupabase
       .from('teams')
-      .insert({ name, short_name, group_name, logo_url, color })
+      .insert({ name, short_name, group_name, logo_url, color, category })
       .select()
       .single();
 

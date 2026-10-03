@@ -115,10 +115,13 @@ export async function POST(request: Request) {
     const team_b_id = typeof body?.team_b_id === 'string' ? body.team_b_id : '';
     const match_date = typeof body?.match_date === 'string' ? body.match_date.trim() : '';
     const kickoff_time = typeof body?.kickoff_time === 'string' ? body.kickoff_time.trim() : '';
-    const field = typeof body?.field === 'string' ? body.field.trim() : '';
+    // Kategori menentukan lapangan otomatis: U10 → Lapangan 1, U12 → Lapangan 2.
+    const category =
+      typeof body?.category === 'string' ? body.category.trim().toUpperCase() : '';
+    const field = category === 'U10' ? '1' : category === 'U12' ? '2' : '';
 
-    if (!team_a_id || !team_b_id || !match_date || !kickoff_time || !field) {
-      return NextResponse.json({ success: false, error: 'Tim, tanggal, jam, dan lapangan wajib diisi.' }, { status: 400 });
+    if (!team_a_id || !team_b_id || !match_date || !kickoff_time || !category) {
+      return NextResponse.json({ success: false, error: 'Tim, kategori, tanggal, dan jam wajib diisi.' }, { status: 400 });
     }
     if (!UUID_RE.test(team_a_id) || !UUID_RE.test(team_b_id)) {
       return NextResponse.json({ success: false, error: 'ID tim tidak valid.' }, { status: 400 });
@@ -132,7 +135,27 @@ export async function POST(request: Request) {
     if (!TIME_RE.test(kickoff_time)) {
       return NextResponse.json({ success: false, error: 'Format jam tidak valid. Gunakan HH:MM.' }, { status: 400 });
     }
+    if (category !== 'U10' && category !== 'U12') {
+      return NextResponse.json({ success: false, error: 'Kategori harus U10 atau U12.' }, { status: 400 });
+    }
 
+    const adminSupabase = getServiceSupabase();
+
+    // Tim A/B harus satu kategori dengan pertandingan (U10 tak bisa lawan U12).
+    const { data: pair, error: pairErr } = await adminSupabase
+      .from('teams')
+      .select('id, category')
+      .in('id', [team_a_id, team_b_id]);
+    if (pairErr) throw pairErr;
+    if (!pair || pair.length !== 2) {
+      return NextResponse.json({ success: false, error: 'Salah satu tim tidak ditemukan.' }, { status: 400 });
+    }
+    if (pair.some((t) => t.category !== category)) {
+      return NextResponse.json(
+        { success: false, error: `Kedua tim harus berkategori ${category}.` },
+        { status: 400 }
+      );
+    }
     const status = body?.status === undefined ? 'scheduled' : body.status;
     if (!STATUSES.includes(status)) {
       return NextResponse.json({ success: false, error: 'Status tidak valid.' }, { status: 400 });
@@ -144,10 +167,9 @@ export async function POST(request: Request) {
     const group_name =
       typeof body?.group_name === 'string' && body.group_name.trim() ? body.group_name.trim() : null;
 
-    const adminSupabase = getServiceSupabase();
     const { data, error } = await adminSupabase
       .from('matches')
-      .insert({ team_a_id, team_b_id, match_date, kickoff_time, field, status, stage, group_name })
+      .insert({ team_a_id, team_b_id, match_date, kickoff_time, field, status, stage, group_name, category })
       .select('*, team_a:teams!team_a_id(*), team_b:teams!team_b_id(*)')
       .single();
 

@@ -11,6 +11,8 @@ export interface Team {
   group_name: string;
   color: string | null;
   created_at: string;
+  /** Kategori kompetisi: 'U10' | 'U12'. Opsional sampai migrasi Fase 3. */
+  category?: string | null;
 }
 
 export interface Match {
@@ -26,6 +28,8 @@ export interface Match {
   stage: MatchStage;
   group_name: string | null;
   updated_at: string;
+  /** Kategori kompetisi: 'U10' | 'U12'. Opsional sampai migrasi Fase 3. */
+  category?: string | null;
 }
 
 export interface MatchWithTeams extends Match {
@@ -78,6 +82,7 @@ export interface TeamFormData {
   logo_url?: string;
   group_name: string;
   color?: string;
+  category: string;
 }
 
 export interface MatchFormData {
@@ -88,4 +93,5 @@ export interface MatchFormData {
   field: string;
   stage: MatchStage;
   group_name?: string;
+  category: string;
 }

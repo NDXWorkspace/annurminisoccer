@@ -78,14 +78,14 @@ const ts = (v: string | null) => q(v ?? null);
 const teamsBlock = teams
   .map(
     (t) =>
-      `  { id: ${q(t.id)}, name: ${q(t.name)}, short_name: ${q(t.short_name)}, logo_url: ${ts(t.logo_url)}, group_name: ${q(t.group_name)}, color: ${ts(t.color)}, created_at: CREATED_AT },`
+      `  { id: ${q(t.id)}, name: ${q(t.name)}, short_name: ${q(t.short_name)}, logo_url: ${ts(t.logo_url)}, group_name: ${q(t.group_name)}, color: ${ts(t.color)}, category: ${q(t.category ?? 'U10')}, created_at: CREATED_AT },`
   )
   .join('\n');
 
 const matchLines = safeMatches
   .map(
     (m) =>
-      `  { id: ${q(m.id)}, team_a_id: ${q(m.team_a_id)}, team_b_id: ${q(m.team_b_id)}, score_a: ${m.score_a ?? 0}, score_b: ${m.score_b ?? 0}, status: ${q(m.status)}, match_date: ${q(m.match_date)}, kickoff_time: ${q(m.kickoff_time)}, field: ${q(m.field)}, stage: ${q(m.stage)}, group_name: ${ts(m.group_name)} },`
+      `  { id: ${q(m.id)}, team_a_id: ${q(m.team_a_id)}, team_b_id: ${q(m.team_b_id)}, score_a: ${m.score_a ?? 0}, score_b: ${m.score_b ?? 0}, status: ${q(m.status)}, match_date: ${q(m.match_date)}, kickoff_time: ${q(m.kickoff_time)}, field: ${q(m.field)}, stage: ${q(m.stage)}, group_name: ${ts(m.group_name)}, category: ${q(m.category ?? 'U10')} },`
   )
   .join('\n');
 

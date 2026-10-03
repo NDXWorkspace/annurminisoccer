@@ -8,31 +8,28 @@ export default function Error({ error, reset }: { error: Error; reset: () => voi
     console.error('Route error:', error);
   }, [error]);
   return (
-    <div className="pitch-wash relative flex min-h-screen items-center justify-center overflow-hidden px-6">
-      <div className="relative max-w-md text-center">
-        <span className="label-programme text-live-red">Terjadi kesalahan</span>
-
-        <h1 className="mt-4 font-display text-4xl font-extrabold uppercase leading-none tracking-[0.01em] text-chalk sm:text-5xl">
-          Ada gangguan
+    <div className="bg-paper px-4 py-16">
+      <div className="rule-double mx-auto max-w-[1080px] pt-6">
+        <p className="font-mono text-[13px] text-muted">Terjadi kesalahan</p>
+        <h1 className="mt-2 font-display text-5xl font-extrabold text-ink">
+          Data tidak dapat dimuat
         </h1>
-
-        <p className="mt-4 text-sm leading-relaxed text-chalk-dim">
-          Halaman ini gagal dimuat. Coba muat ulang — jika masalahnya berlanjut, periksa koneksi
+        <p className="mt-3 max-w-[65ch] text-muted">
+          Halaman ini gagal dimuat. Coba muat ulang. Jika berlanjut, periksa koneksi
           Anda lalu hubungi panitia.
         </p>
-
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+        <div className="mt-6 flex flex-wrap gap-3">
           <button
             onClick={reset}
-            className="rounded-lg bg-flood px-5 py-3 font-display text-sm font-bold uppercase tracking-[0.12em] text-ink transition-transform duration-200 hover:-translate-y-0.5"
+            className="inline-flex h-12 items-center rounded-[4px] bg-blue px-5 font-display text-base font-bold uppercase text-white"
           >
             Coba lagi
           </button>
           <Link
             href="/"
-            className="rounded-lg border border-line-bright bg-ink-raised px-5 py-3 font-display text-sm font-bold uppercase tracking-[0.12em] text-chalk transition-colors hover:border-flood/50 hover:text-flood"
+            className="inline-flex h-12 items-center rounded-[4px] border-[1.5px] border-ink px-5 font-display text-base font-bold uppercase text-ink"
           >
-            Ke beranda
+            Kembali ke jadwal
           </Link>
         </div>
       </div>

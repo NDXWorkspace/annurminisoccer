@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import LoginForm from './LoginForm';
 
 export const metadata = {
-  title: 'Login Panitia',
+  title: 'Masuk Panitia',
 };
 
 export default function LoginPage() {

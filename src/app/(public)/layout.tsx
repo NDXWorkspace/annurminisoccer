@@ -1,10 +1,14 @@
 import Link from 'next/link';
 import BottomNav from '@/components/BottomNav';
+import MatchdayRail from '@/components/MatchdayRail';
 
 const NAV = [
-  { name: 'Jadwal', path: '/' },
+  { name: 'Beranda', path: '/' },
+  { name: 'Jadwal', path: '/jadwal' },
+  { name: 'Live', path: '/live' },
   { name: 'Klasemen', path: '/klasemen' },
   { name: 'Tim', path: '/tim' },
+  { name: 'Info', path: '/info' },
 ];
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
@@ -15,7 +19,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
           <Link href="/" className="font-display text-xl font-extrabold tracking-tight text-ink">
             An-Nur Mini Soccer
           </Link>
-          <nav aria-label="Navigasi utama" className="hidden items-center gap-6 lg:flex">
+          <nav aria-label="Navigasi utama" className="hidden items-center gap-5 lg:flex">
             {NAV.map((item) => (
               <Link
                 key={item.path}
@@ -29,13 +33,32 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         </div>
       </header>
 
+      <MatchdayRail />
+
       <main className="mx-auto w-full max-w-[1080px] flex-1 px-4 pb-safe lg:pb-8">
         {children}
       </main>
 
       <footer className="border-t border-rule bg-white">
         <div className="mx-auto w-full max-w-[1080px] px-4 py-6">
-          <p className="max-w-[65ch] text-sm text-muted">
+          <nav aria-label="Tautan" className="flex flex-wrap gap-x-5 gap-y-2">
+            {NAV.map((item) => (
+              <Link
+                key={item.path}
+                href={item.path}
+                className="font-display text-sm font-bold uppercase text-ink hover:text-blue"
+              >
+                {item.name}
+              </Link>
+            ))}
+            <Link
+              href="/panitia"
+              className="font-display text-sm font-bold uppercase text-muted hover:text-blue"
+            >
+              Panitia
+            </Link>
+          </nav>
+          <p className="mt-3 max-w-[65ch] text-sm text-muted">
             Skor diinput manual oleh panitia. Jika ada selisih, keputusan panitia yang
             berlaku.
           </p>

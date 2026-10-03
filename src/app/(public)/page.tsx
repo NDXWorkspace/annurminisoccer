@@ -1,21 +1,14 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import type { ApiResponse, EventSettings, MatchWithTeams } from '@/lib/types';
 import { SEED_MATCHES, SEED_SETTINGS } from '@/lib/seed';
-import { formatShortDate, formatTime, todayWIB } from '@/lib/utils';
+import { formatShortDate, todayWIB } from '@/lib/utils';
 import { useCategory } from '@/hooks/useCategory';
 import MatchRow from '@/components/MatchRow';
 import CategoryMark from '@/components/CategoryMark';
 import StatusBadge from '@/components/StatusBadge';
-
-function dayLabel(dateStr: string): string {
-  const weekday = new Date(`${dateStr}T12:00:00`).toLocaleDateString('id-ID', {
-    weekday: 'long',
-  });
-  const short = formatShortDate(dateStr);
-  return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)}, ${short}`;
-}
 
 function stamp(date: Date): string {
   return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
@@ -26,8 +19,7 @@ export default function BerandaPage() {
   const [settings, setSettings] = useState<EventSettings | null>(SEED_SETTINGS);
   const [updatedAt, setUpdatedAt] = useState<string>('');
   const [offline, setOffline] = useState(false);
-  const [category, setCategory] = useCategory();
-  const [day, setDay] = useState('');
+  const [category] = useCategory();
 
   useEffect(() => {
     let cancelled = false;
@@ -70,13 +62,6 @@ export default function BerandaPage() {
     [matches]
   );
 
-  useEffect(() => {
-    if (!day && days.length > 0) {
-      const today = todayWIB();
-      setDay(days.includes(today) ? today : days[0]);
-    }
-  }, [days, day]);
-
   const byKickoff = (a: MatchWithTeams, b: MatchWithTeams) =>
     `${a.match_date}${a.kickoff_time}`.localeCompare(`${b.match_date}${b.kickoff_time}`);
 
@@ -90,24 +75,16 @@ export default function BerandaPage() {
     [matches, activeCategory]
   );
 
-  const dayMatches = useMemo(
-    () =>
-      matches
-        .filter((m) => (day ? m.match_date === day : true))
-        .filter((m) => activeCategory === 'Semua' || m.category === activeCategory)
-        .sort(byKickoff),
-    [matches, day, activeCategory]
-  );
+  const dayMatches = useMemo(() => {
+    const today = todayWIB();
+    const pool = matches.filter((m) => m.match_date === today);
+    const list = (pool.length > 0 ? pool : matches)
+      .filter((m) => activeCategory === 'Semua' || m.category === activeCategory)
+      .sort(byKickoff);
+    return list;
+  }, [matches, activeCategory]);
 
-  const groups = useMemo(() => {
-    const map = new Map<string, MatchWithTeams[]>();
-    for (const m of dayMatches) {
-      const key = m.kickoff_time;
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(m);
-    }
-    return [...map.entries()].sort(([a], [b]) => a.localeCompare(b));
-  }, [dayMatches]);
+  const preview = dayMatches.slice(0, 6);
 
   const dateLabel = (() => {
     const start = settings?.start_date || '2026-10-09';
@@ -216,79 +193,33 @@ export default function BerandaPage() {
           </section>
         )}
 
-        {/* ============ JADWAL ============ */}
-        <section aria-label="Jadwal pertandingan">
-          <div className="rule-double pt-3">
+        {/* ============ JADWAL HARI INI (ringkas) ============ */}
+        <section aria-label="Jadwal hari ini">
+          <div className="rule-double flex flex-wrap items-end justify-between gap-3 pt-3">
             <h2 className="font-display text-[32px] font-extrabold leading-none text-ink md:text-[44px]">
-              Jadwal
+              Hari ini
             </h2>
+            <Link
+              href="/jadwal"
+              className="font-display text-base font-bold uppercase text-blue"
+            >
+              Jadwal lengkap
+            </Link>
           </div>
 
-          {categories.length > 0 && (
-            <div
-              role="group"
-              aria-label="Kategori"
-              className="mt-4 grid grid-cols-3 border border-rule bg-white"
-            >
-              {['Semua', ...categories].map((c) => (
-                <button
-                  key={c}
-                  onClick={() => setCategory(c)}
-                  aria-pressed={activeCategory === c}
-                  className={`h-12 font-display text-base font-bold uppercase ${
-                    activeCategory === c ? 'bg-blue text-white' : 'text-ink'
-                  }`}
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {days.length > 1 && (
-            <div role="tablist" aria-label="Hari" className="mt-4 flex gap-6 border-b border-rule">
-              {days.map((d) => (
-                <button
-                  key={d}
-                  role="tab"
-                  aria-selected={day === d}
-                  onClick={() => setDay(d)}
-                  className={`h-12 font-display text-base font-bold uppercase ${
-                    day === d
-                      ? 'border-b-[3px] border-blue text-blue'
-                      : 'text-muted'
-                  }`}
-                >
-                  {dayLabel(d)}
-                </button>
-              ))}
-            </div>
-          )}
-
           <div className="mt-4 border-t border-rule">
-            {groups.length === 0 ? (
+            {preview.length === 0 ? (
               <p className="border-b border-rule bg-white px-4 py-8 text-muted">
-                {activeCategory === 'Semua'
-                  ? 'Jadwal belum diumumkan.'
-                  : `Jadwal ${activeCategory} belum diumumkan.`}
+                Jadwal belum diumumkan.
               </p>
             ) : (
-              groups.map(([time, list]) => (
-                <div key={time}>
-                  {activeCategory === 'Semua' && list.length > 1 && (
-                    <p className="score-display border-b border-rule bg-white px-4 pt-4 text-3xl text-ink">
-                      {formatTime(time)}
-                    </p>
-                  )}
-                  {list.map((m, i) => (
-                    <MatchRow
-                      key={m.id}
-                      match={m}
-                      code={`M-${String(i + 1).padStart(2, '0')}`}
-                      showCategory={activeCategory === 'Semua'}
-                    />
-                  ))}
-                </div>
+              preview.map((m, i) => (
+                <MatchRow
+                  key={m.id}
+                  match={m}
+                  code={`M-${String(i + 1).padStart(2, '0')}`}
+                  showCategory={activeCategory === 'Semua'}
+                />
               ))
             )}
           </div>

@@ -10,11 +10,7 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["192.168.110.162", "localhost", "127.0.0.1"],
   async redirects() {
     return [
-      // Rute lama yang dilebur sesuai DESIGN.md.
-      { source: '/jadwal', destination: '/', permanent: true },
-      { source: '/live', destination: '/', permanent: true },
-      { source: '/info', destination: '/', permanent: true },
-      { source: '/updateskor', destination: '/panitia', permanent: true },
+      // Rute lama dasbor admin.
       { source: '/admin', destination: '/panitia', permanent: true },
       { source: '/admin/:path*', destination: '/panitia/:path*', permanent: true },
     ];

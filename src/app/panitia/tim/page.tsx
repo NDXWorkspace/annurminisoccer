@@ -9,7 +9,7 @@ const EMPTY: TeamFormData = {
   name: '',
   short_name: '',
   group_name: 'A',
-  color: '#0B3D91',
+  color: '#5B8DFF',
   logo_url: '',
   category: 'U10',
 };
@@ -25,7 +25,7 @@ export default function TimPanitia() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  async function fetchTeams() {
+  async function loadTeams() {
     try {
       const res = await fetch('/api/teams', { cache: 'no-store' });
       const data = await res.json().catch(() => ({}));
@@ -47,7 +47,7 @@ export default function TimPanitia() {
   }
 
   useEffect(() => {
-    fetchTeams();
+    loadTeams();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,15 +58,14 @@ export default function TimPanitia() {
     }
     try {
       const url = editingId ? `/api/teams/${editingId}` : '/api/teams';
-      const method = editingId ? 'PUT' : 'POST';
       const res = await fetch(url, {
-        method,
+        method: editingId ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...formData, short_name: formData.short_name.toUpperCase() }),
       });
       if (res.ok) {
         closeForm();
-        fetchTeams();
+        loadTeams();
         setMessage({
           type: 'success',
           text: editingId ? 'Tim berhasil diperbarui.' : 'Tim berhasil ditambahkan.',
@@ -87,7 +86,7 @@ export default function TimPanitia() {
       const res = await fetch(`/api/teams/${deletingTeam.id}`, { method: 'DELETE' });
       if (res.ok) {
         setDeletingTeam(null);
-        fetchTeams();
+        loadTeams();
         setMessage({ type: 'success', text: 'Tim berhasil dihapus.' });
       } else {
         const err = await res.json().catch(() => ({}));
@@ -105,7 +104,7 @@ export default function TimPanitia() {
       name: team.name,
       short_name: team.short_name,
       group_name: team.group_name,
-      color: team.color || '#0B3D91',
+      color: team.color || '#5B8DFF',
       logo_url: team.logo_url || '',
       category: team.category ?? 'U10',
     });
@@ -120,84 +119,76 @@ export default function TimPanitia() {
   };
 
   if (isLoading) {
-    return (
-      <div className="border border-rule bg-white px-4 py-8">
-        <div className="h-8 w-1/2 bg-rule" />
-        <div className="mt-3 h-4 w-1/3 bg-rule" />
-      </div>
-    );
+    return <div className="h-40 animate-pulse rounded-[28px] bg-raise" />;
   }
 
-  const inputCls =
-    'h-[52px] w-full rounded-[2px] border-[1.5px] border-rule bg-white px-3 text-base text-ink outline-none focus:border-blue';
+  const input =
+    'h-12 w-full rounded-full border border-line bg-surface px-4 text-base text-text outline-none transition-colors focus:border-blue';
 
   return (
     <div className="space-y-6">
       {message && (
-        <p className={`border border-rule bg-white px-4 py-3 text-sm ${message.type === 'success' ? 'text-blue' : 'text-alert'}`}>
+        <p
+          className={`rounded-full border border-line px-5 py-3 text-sm ${
+            message.type === 'success' ? 'text-blue' : 'text-danger'
+          }`}
+        >
           {message.text}
         </p>
       )}
 
       {loadError && (
-        <div className="flex flex-wrap items-center justify-between gap-3 border border-alert bg-white px-4 py-3">
-          <p className="text-sm text-alert">{loadError}</p>
-          <button
-            onClick={() => {
-              setIsLoading(true);
-              fetchTeams();
-            }}
-            className="h-11 rounded-[4px] border-[1.5px] border-ink px-4 font-display text-sm font-bold uppercase text-ink"
-          >
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-full border border-danger/40 bg-danger/10 px-5 py-3">
+          <p className="text-sm text-danger">{loadError}</p>
+          <button onClick={() => loadTeams()} className="label text-text">
             Coba lagi
           </button>
         </div>
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-3xl font-extrabold text-ink">Tim</h1>
-        <button
-          onClick={() => setIsFormOpen(true)}
-          className="h-12 rounded-[4px] bg-blue px-5 font-display text-base font-bold uppercase text-white hover:bg-ink"
-        >
+        <h1 className="rule-title font-display text-3xl font-extrabold">Tim</h1>
+        <button onClick={() => setIsFormOpen(true)} className="label h-12 rounded-full bg-blue px-6 text-ink">
           Tambah tim
         </button>
       </div>
 
       {isFormOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 p-4">
-          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto border border-rule bg-white">
-            <div className="flex items-center justify-between border-b border-rule px-4 py-3">
-              <h2 className="font-display text-xl font-extrabold text-ink">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-[28px] border border-line bg-surface">
+            <div className="flex items-center justify-between border-b border-line px-5 py-3">
+              <h2 className="font-display text-xl font-extrabold">
                 {editingId ? 'Ubah tim' : 'Tambah tim'}
               </h2>
-              <button onClick={closeForm} className="flex h-11 w-11 items-center justify-center text-ink" aria-label="Tutup">
-                ✕
+              <button onClick={closeForm} className="label h-9 px-3 text-muted" aria-label="Tutup">
+                Tutup
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="space-y-4 px-4 py-4">
+            <form onSubmit={handleSubmit} className="space-y-4 px-5 py-4">
               <div>
-                <label htmlFor="t-name" className="label block text-ink">Nama tim</label>
+                <label htmlFor="t-name" className="label block text-muted">
+                  Nama tim
+                </label>
                 <input
                   id="t-name"
                   type="text"
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className={`${inputCls} mt-1.5`}
+                  className={`${input} mt-1.5`}
                 />
               </div>
               <div>
-                <span className="label block text-ink">Kategori</span>
-                <div className="mt-1.5 grid grid-cols-2 border border-rule" role="group" aria-label="Kategori">
+                <span className="label block text-muted">Kategori</span>
+                <div className="pill mt-1.5 w-full gap-0.5 p-1" role="group" aria-label="Kategori">
                   {['U10', 'U12'].map((c) => (
                     <button
                       key={c}
                       type="button"
                       onClick={() => setFormData({ ...formData, category: c })}
                       aria-pressed={formData.category === c}
-                      className={`h-12 font-display text-base font-bold uppercase ${
-                        formData.category === c ? 'bg-blue text-white' : 'text-ink'
+                      className={`label h-11 flex-1 rounded-full ${
+                        formData.category === c ? 'bg-text text-ink' : 'text-muted'
                       }`}
                     >
                       {c}
@@ -207,24 +198,30 @@ export default function TimPanitia() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label htmlFor="t-short" className="label block text-ink">Singkatan (3 huruf)</label>
+                  <label htmlFor="t-short" className="label block text-muted">
+                    Singkatan (3 huruf)
+                  </label>
                   <input
                     id="t-short"
                     type="text"
                     required
                     maxLength={3}
                     value={formData.short_name}
-                    onChange={(e) => setFormData({ ...formData, short_name: e.target.value.toUpperCase() })}
-                    className={`${inputCls} mt-1.5 font-mono uppercase`}
+                    onChange={(e) =>
+                      setFormData({ ...formData, short_name: e.target.value.toUpperCase() })
+                    }
+                    className={`${input} mt-1.5 font-mono uppercase`}
                   />
                 </div>
                 <div>
-                  <label htmlFor="t-group" className="label block text-ink">Grup</label>
+                  <label htmlFor="t-group" className="label block text-muted">
+                    Grup
+                  </label>
                   <select
                     id="t-group"
                     value={formData.group_name}
                     onChange={(e) => setFormData({ ...formData, group_name: e.target.value })}
-                    className={`${inputCls} mt-1.5`}
+                    className={`${input} mt-1.5`}
                   >
                     {['A', 'B', 'C', 'D'].map((g) => (
                       <option key={g} value={g}>
@@ -235,30 +232,29 @@ export default function TimPanitia() {
                 </div>
               </div>
               <div>
-                <label htmlFor="t-color" className="label block text-ink">Warna tim</label>
+                <label htmlFor="t-color" className="label block text-muted">
+                  Warna tim
+                </label>
                 <div className="mt-1.5 flex items-center gap-3">
                   <input
                     id="t-color"
                     type="color"
                     value={formData.color}
                     onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                    className="h-[52px] w-16 cursor-pointer rounded-[2px] border-[1.5px] border-rule bg-white p-1"
+                    className="h-12 w-16 cursor-pointer rounded-full border border-line bg-surface p-1"
                   />
-                  <span className="font-mono text-sm uppercase text-muted">{formData.color}</span>
+                  <span className="label text-muted">{formData.color}</span>
                 </div>
               </div>
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-3 pt-1">
                 <button
                   type="button"
                   onClick={closeForm}
-                  className="h-12 flex-1 rounded-[4px] border-[1.5px] border-ink font-display text-base font-bold uppercase text-ink"
+                  className="label h-12 flex-1 rounded-full border border-line"
                 >
                   Batal
                 </button>
-                <button
-                  type="submit"
-                  className="h-12 flex-1 rounded-[4px] bg-blue font-display text-base font-bold uppercase text-white hover:bg-ink"
-                >
+                <button type="submit" className="label h-12 flex-1 rounded-full bg-blue text-ink">
                   Simpan
                 </button>
               </div>
@@ -267,50 +263,58 @@ export default function TimPanitia() {
         </div>
       )}
 
-      <div className="overflow-x-auto border border-rule bg-white">
-        <table className="w-full min-w-[640px] border-collapse text-left">
+      <div className="overflow-x-auto rounded-[28px] border border-line">
+        <table className="w-full min-w-[640px] border-collapse">
           <thead>
-            <tr className="bg-ink text-white">
-              <th scope="col" className="label px-4 py-2.5">Tim</th>
-              <th scope="col" className="label px-4 py-2.5">Kategori</th>
-              <th scope="col" className="label px-4 py-2.5">Grup</th>
-              <th scope="col" className="label px-4 py-2.5 text-right">Aksi</th>
+            <tr className="border-b border-line bg-surface">
+              <th scope="col" className="label px-5 py-4 text-left text-muted">
+                Tim
+              </th>
+              <th scope="col" className="label px-5 py-4 text-left text-muted">
+                Kategori
+              </th>
+              <th scope="col" className="label px-5 py-4 text-left text-muted">
+                Grup
+              </th>
+              <th scope="col" className="label px-5 py-4 text-right text-muted">
+                Aksi
+              </th>
             </tr>
           </thead>
           <tbody>
             {teams.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-muted">
+                <td colSpan={4} className="px-5 py-8 text-center text-muted">
                   Belum ada tim terdaftar.
                 </td>
               </tr>
             ) : (
               teams.map((team) => (
-                <tr key={team.id} className="border-b border-rule last:border-0">
-                  <td className="px-4 py-3">
+                <tr key={team.id} className="border-b border-line last:border-0">
+                  <td className="px-5 py-3">
                     <span className="flex items-center gap-3">
-                      <Monogram name={team.name} shortName={team.short_name} color={team.color} size={32} />
+                      <Monogram name={team.name} shortName={team.short_name} color={team.color} size={36} />
                       <span>
-                        <span className="block font-bold text-ink">{team.name}</span>
-                        <span className="font-mono text-xs text-muted">{team.short_name}</span>
+                        <span className="block font-bold">{team.name}</span>
+                        <span className="label text-muted">{team.short_name}</span>
                       </span>
                     </span>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-5 py-3">
                     <CategoryMark category={team.category ?? 'U10'} />
                   </td>
-                  <td className="px-4 py-3 text-ink">Grup {team.group_name}</td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-5 py-3">Grup {team.group_name}</td>
+                  <td className="px-5 py-3 text-right">
                     <span className="inline-flex gap-2">
                       <button
                         onClick={() => openEditForm(team)}
-                        className="h-11 rounded-[4px] border-[1.5px] border-ink px-4 font-display text-sm font-bold uppercase text-ink"
+                        className="label h-11 rounded-full border border-line px-4"
                       >
                         Ubah
                       </button>
                       <button
                         onClick={() => setDeletingTeam(team)}
-                        className="h-11 rounded-[4px] border-[1.5px] border-alert px-4 font-display text-sm font-bold uppercase text-alert"
+                        className="label h-11 rounded-full border border-danger/40 px-4 text-danger"
                       >
                         Hapus
                       </button>
@@ -324,19 +328,19 @@ export default function TimPanitia() {
       </div>
 
       {deletingTeam && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 p-4">
-          <div className="w-full max-w-sm border border-rule bg-white p-6 text-center">
-            <h3 className="font-display text-xl font-extrabold text-ink">Hapus tim?</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-sm rounded-[28px] border border-line bg-surface p-6 text-center">
+            <h3 className="font-display text-xl font-extrabold">Hapus tim?</h3>
             <p className="mt-2 text-sm text-muted">
               Tim {deletingTeam.name} akan dihapus permanen. Tim yang sudah punya
               pertandingan tidak dapat dihapus.
             </p>
-            <div className="mt-4 flex gap-3">
+            <div className="mt-5 flex gap-3">
               <button
                 type="button"
                 disabled={isDeleting}
                 onClick={() => setDeletingTeam(null)}
-                className="h-12 flex-1 rounded-[4px] border-[1.5px] border-ink font-display text-base font-bold uppercase text-ink"
+                className="label h-12 flex-1 rounded-full border border-line"
               >
                 Batal
               </button>
@@ -344,7 +348,7 @@ export default function TimPanitia() {
                 type="button"
                 disabled={isDeleting}
                 onClick={confirmDeleteTeam}
-                className="h-12 flex-1 rounded-[4px] bg-alert font-display text-base font-bold uppercase text-white"
+                className="label h-12 flex-1 rounded-full bg-danger text-white"
               >
                 {isDeleting ? 'Menghapus…' : 'Hapus'}
               </button>

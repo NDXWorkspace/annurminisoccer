@@ -27,7 +27,7 @@ export default function InfoPage() {
         const data: ApiResponse<EventSettings> = await res.json();
         if (data.success && data.data) setSettings(data.data);
       } catch {
-        // keep the previous snapshot
+        // pertahankan snapshot terakhir
       } finally {
         if (initial) setLoading(false);
       }
@@ -39,11 +39,8 @@ export default function InfoPage() {
 
   if (loading && !settings) {
     return (
-      <div className="mx-auto w-full max-w-[1080px] px-4 py-8">
-        <div className="border border-rule bg-white px-4 py-8">
-          <div className="h-8 w-1/2 bg-rule" />
-          <div className="mt-3 h-4 w-1/3 bg-rule" />
-        </div>
+      <div className="wrap pt-12">
+        <div className="h-10 w-2/3 rounded-full bg-raise" />
       </div>
     );
   }
@@ -74,30 +71,38 @@ export default function InfoPage() {
     : DEFAULT_RULES;
 
   return (
-    <div className="mx-auto w-full max-w-[1080px] px-4 py-8">
-      <div className="rule-double pt-3">
-        <h1 className="font-display text-[32px] font-extrabold leading-none text-ink md:text-[44px]">
-          {settings?.event_name || 'An-Nur Mini Soccer'}
-        </h1>
-      </div>
+    <div className="wrap pt-12 pb-8">
+      <h1 className="rule-title font-display text-[30px] font-extrabold md:text-[46px]">
+        {settings?.event_name || 'An-Nur Mini Soccer'}
+      </h1>
 
-      <dl className="mt-6 border border-rule bg-white">
+      <dl className="mt-6 overflow-hidden rounded-[28px] border border-line bg-surface">
         {facts.map((f) => (
-          <div key={f.label} className="flex items-start gap-4 border-b border-rule px-4 py-4 last:border-0">
-            <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-[2px] border-[1.5px] border-ink text-ink">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <div
+            key={f.label}
+            className="flex items-start gap-4 border-b border-line px-5 py-4 last:border-0"
+          >
+            <span className="mt-0.5 flex h-10 w-10 flex-none items-center justify-center rounded-full border border-line text-blue">
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1.5}
+                aria-hidden
+              >
                 <path strokeLinecap="round" strokeLinejoin="round" d={f.icon} />
               </svg>
             </span>
             <div className="min-w-0 flex-1">
               <dt className="label text-muted">{f.label}</dt>
-              <dd className="mt-1 whitespace-pre-line text-base leading-relaxed text-ink">{f.value}</dd>
+              <dd className="mt-1 whitespace-pre-line text-base leading-relaxed">{f.value}</dd>
               {f.label === 'Lokasi' && settings?.map_url && (
                 <a
                   href={settings.map_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-2 inline-block font-display text-base font-bold uppercase text-blue"
+                  className="label mt-2 inline-block text-blue"
                 >
                   Buka peta
                 </a>
@@ -107,28 +112,27 @@ export default function InfoPage() {
         ))}
       </dl>
 
-      <section aria-label="Peraturan turnamen" className="mt-10">
-        <div className="rule-double pt-3">
-          <h2 className="font-display text-2xl font-extrabold text-ink">Peraturan turnamen</h2>
-        </div>
-        <ol className="mt-3 border-t border-rule">
+      <section aria-label="Peraturan turnamen" className="mt-12">
+        <h2 className="rule-title font-display text-2xl font-extrabold">Peraturan turnamen</h2>
+        <ol className="mt-4 overflow-hidden rounded-[28px] border border-line">
           {rules.map((r, i) => (
-            <li key={i} className="flex gap-4 border-b border-rule bg-white px-4 py-3.5">
-              <span className="score-display shrink-0 text-2xl text-ink">
+            <li
+              key={i}
+              className="flex gap-4 border-b border-line bg-white/[0.025] px-5 py-4 last:border-0"
+            >
+              <span className="num w-8 flex-none text-2xl text-blue">
                 {String(i + 1).padStart(2, '0')}
               </span>
-              <span className="text-base leading-relaxed text-ink">{r}</span>
+              <span className="text-base leading-relaxed">{r}</span>
             </li>
           ))}
         </ol>
       </section>
 
-      <section aria-label="Urutan tie-break" className="mt-10">
-        <div className="rule-double pt-3">
-          <h2 className="font-display text-2xl font-extrabold text-ink">Urutan tie-break</h2>
-        </div>
-        <div className="mt-3 border border-rule bg-white px-4 py-5">
-          <p className="font-display text-xl font-extrabold text-ink">
+      <section aria-label="Urutan tie-break" className="mt-12">
+        <h2 className="rule-title font-display text-2xl font-extrabold">Urutan tie-break</h2>
+        <div className="mt-4 rounded-[28px] border border-line bg-surface px-5 py-5">
+          <p className="font-display text-xl font-extrabold">
             {settings?.tiebreak_rules || 'Poin, selisih gol, gol memasukkan'}
           </p>
           <ol className="mt-3 space-y-1.5 text-sm text-muted">
@@ -138,7 +142,7 @@ export default function InfoPage() {
           </ol>
           <Link
             href="/klasemen"
-            className="mt-4 inline-flex h-12 items-center rounded-[4px] border-[1.5px] border-ink px-5 font-display text-base font-bold uppercase text-ink"
+            className="label mt-5 inline-flex h-12 items-center rounded-full border border-line px-6"
           >
             Lihat klasemen
           </Link>

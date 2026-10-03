@@ -6,7 +6,6 @@ import type { ApiResponse, GroupStandings, MatchWithTeams, Team } from '@/lib/ty
 import { calculateAllStandings, calculateStandings } from '@/lib/utils';
 import { SEED_TEAMS, SEED_MATCHES } from '@/lib/seed';
 import { useCategory } from '@/hooks/useCategory';
-import Monogram from '@/components/Monogram';
 
 const COLS: { key: string; label: string; title: string }[] = [
   { key: 'played', label: 'M', title: 'Main' },
@@ -58,89 +57,75 @@ export default function KlasemenPage() {
     return cats.sort();
   }, [teams]);
 
-  const activeCategory = categories.includes(category)
-    ? category
-    : (categories[0] ?? '');
+  const activeCategory = categories.includes(category) ? category : (categories[0] ?? '');
 
+  // Hanya tim kategori aktif yang dihitung — dua kategori tidak pernah tercampur.
   const visible = useMemo(() => {
     if (!activeCategory) return standings;
-    const teamIds = new Set(teams.filter((t) => t.category === activeCategory).map((t) => t.id));
+    const teamIds = new Set(
+      teams.filter((t) => (t.category ?? 'U10') === activeCategory).map((t) => t.id)
+    );
     const groupNames = [
       ...new Set(teams.filter((t) => teamIds.has(t.id)).map((t) => t.group_name)),
     ].sort();
-    // Hitung ulang hanya untuk tim kategori aktif.
     return groupNames.map((g) => ({
       group_name: g,
-      rows: calculateStandings(
-        teams.filter((t) => teamIds.has(t.id)),
-        matches,
-        g
-      ),
+      rows: calculateStandings(teams.filter((t) => teamIds.has(t.id)), matches, g),
     }));
   }, [standings, teams, matches, activeCategory]);
 
   return (
-    <div className="mx-auto w-full max-w-[1080px] px-4 py-8">
-      <div className="rule-double pt-3">
-        <h1 className="font-display text-[32px] font-extrabold leading-none text-ink md:text-[44px]">
+    <div className="wrap pt-12">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="rule-title font-display text-[30px] font-extrabold md:text-[46px]">
           Klasemen
         </h1>
-        <p className="mt-2 max-w-[65ch] text-sm text-muted">
-          Dihitung otomatis dari pertandingan berstatus selesai.
-        </p>
+        {categories.length > 0 && (
+          <div className="pill gap-0.5 p-1" role="group" aria-label="Kategori">
+            {categories.map((c) => (
+              <button
+                key={c}
+                aria-pressed={activeCategory === c}
+                onClick={() => setCategory(c)}
+                className={`label rounded-full px-5 py-2.5 transition-colors ${
+                  activeCategory === c ? 'bg-text text-ink' : 'text-muted hover:text-text'
+                }`}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {categories.length > 1 && (
-        <div
-          role="group"
-          aria-label="Kategori"
-          className="mt-4 grid grid-cols-2 border border-rule bg-white"
-        >
-          {categories.map((c) => (
-            <button
-              key={c}
-              onClick={() => setCategory(c)}
-              aria-pressed={activeCategory === c}
-              className={`h-12 font-display text-base font-bold uppercase ${
-                activeCategory === c ? 'bg-blue text-white' : 'text-ink'
-              }`}
-            >
-              {c}
-            </button>
-          ))}
-        </div>
-      )}
-
       {error && (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border border-alert bg-white px-4 py-3">
-          <p className="text-sm text-alert">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="h-11 rounded-[4px] border-[1.5px] border-ink px-4 font-display text-sm font-bold uppercase text-ink"
-          >
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-full border border-danger/40 bg-danger/10 px-5 py-3">
+          <p className="text-sm text-danger">{error}</p>
+          <button onClick={() => window.location.reload()} className="label text-text">
             Coba lagi
           </button>
         </div>
       )}
 
-      <div className="mt-6 space-y-10">
+      <div className="mt-6 space-y-10 pb-8">
         {visible.map((group) => (
           <section key={group.group_name} aria-label={`Grup ${group.group_name}`}>
             <div className="flex items-baseline justify-between gap-3">
-              <h2 className="font-display text-2xl font-extrabold text-ink">
-                Grup {group.group_name}
-              </h2>
-              <p className="font-mono text-[13px] text-muted">{group.rows.length} tim</p>
+              <h2 className="font-display text-2xl font-extrabold">Grup {group.group_name}</h2>
+              <p className="label text-muted">{group.rows.length} tim</p>
             </div>
 
-            <div className="mt-2 overflow-x-auto border border-rule bg-white">
-              <table className="w-full min-w-[560px] border-collapse text-left">
+            <div className="mt-3 overflow-x-auto rounded-[28px] border border-line bg-surface">
+              <table className="w-full min-w-[580px] border-collapse">
                 <thead>
-                  <tr className="bg-ink text-white">
-                    <th scope="col" className="label sticky left-0 bg-ink px-3 py-2.5 text-center">
+                  <tr className="border-b border-line">
+                    <th scope="col" className="label w-14 px-4 py-4 text-center text-muted">
                       #
                     </th>
-                    <th scope="col" className="label sticky left-10 bg-ink px-2 py-2.5">
+                    <th
+                      scope="col"
+                      className="label sticky left-0 bg-surface px-4 py-4 text-left"
+                    >
                       Tim
                     </th>
                     {COLS.map((c, i) => (
@@ -148,66 +133,77 @@ export default function KlasemenPage() {
                         key={`${c.label}${i}`}
                         scope="col"
                         title={c.title}
-                        className="label w-9 px-1 py-2.5 text-center"
+                        className="label w-9 px-1 py-4 text-center text-muted"
                       >
                         {c.label}
                       </th>
                     ))}
-                    <th scope="col" className="label hidden w-10 px-1 py-2.5 text-center md:table-cell">
+                    <th
+                      scope="col"
+                      className="label hidden w-10 px-1 py-4 text-center text-muted md:table-cell"
+                    >
                       GM
                     </th>
-                    <th scope="col" className="label hidden w-10 px-1 py-2.5 text-center md:table-cell">
+                    <th
+                      scope="col"
+                      className="label hidden w-10 px-1 py-4 text-center text-muted md:table-cell"
+                    >
                       GK
                     </th>
-                    <th scope="col" className="label w-11 px-1 py-2.5 text-center">
+                    <th scope="col" className="label w-11 px-1 py-4 text-center text-muted">
                       SG
                     </th>
-                    <th scope="col" className="label sticky right-0 w-14 bg-ink px-3 py-2.5 text-right">
+                    <th
+                      scope="col"
+                      className="label sticky right-0 bg-surface px-4 py-4 text-right"
+                    >
                       Poin
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {group.rows.map((row, i) => (
-                    <tr key={row.team.id} className="border-b border-rule last:border-0">
-                      <td className="sticky left-0 bg-white px-3 py-2.5 text-center">
+                    <tr
+                      key={row.team.id}
+                      style={{ ['--i' as string]: i }}
+                      className={`animate-enter border-b border-line transition-colors last:border-0 hover:bg-raise ${
+                        i === 0 ? 'bg-[#0E1832]' : ''
+                      }`}
+                    >
+                      <td className="num sticky left-0 w-14 bg-inherit px-4 py-3.5 text-center text-lg">
                         <span className="inline-flex items-center gap-1.5">
                           {i === 0 && (
-                            <span className="inline-block h-1.5 w-1.5 bg-whistle" aria-hidden />
+                            <span
+                              className="inline-block h-2 w-2 rounded-full bg-yellow"
+                              aria-hidden
+                            />
                           )}
-                          <span className="tnum text-sm text-ink">{i + 1}</span>
+                          {i + 1}
                         </span>
                       </td>
-                      <td className="sticky left-10 bg-white px-2 py-2.5">
-                        <Link href={`/tim/${row.team.id}`} className="flex items-center gap-2">
-                          <Monogram
-                            name={row.team.name}
-                            shortName={row.team.short_name}
-                            color={row.team.color}
-                            size={32}
-                          />
-                          <span className="truncate text-[15px] font-bold text-ink">
-                            {row.team.name}
-                          </span>
+                      <td className="sticky left-0 bg-inherit px-4 py-3.5">
+                        <Link
+                          href={`/tim/${row.team.id}`}
+                          className="font-display text-[19px] font-bold leading-tight hover:text-blue"
+                        >
+                          {row.team.name}
                         </Link>
                       </td>
                       {COLS.map((c, k) => (
-                        <td key={k} className="tnum px-1 py-2.5 text-center text-sm text-ink">
+                        <td key={k} className="num px-1 py-3.5 text-center text-base text-text">
                           {row[c.key as keyof typeof row] as number}
                         </td>
                       ))}
-                      <td className="tnum hidden px-1 py-2.5 text-center text-sm text-muted md:table-cell">
+                      <td className="num hidden px-1 py-3.5 text-center text-base text-muted md:table-cell">
                         {row.goals_for}
                       </td>
-                      <td className="tnum hidden px-1 py-2.5 text-center text-sm text-muted md:table-cell">
+                      <td className="num hidden px-1 py-3.5 text-center text-base text-muted md:table-cell">
                         {row.goals_against}
                       </td>
-                      <td className="tnum px-1 py-2.5 text-center text-sm text-ink">
-                        {row.goal_difference > 0
-                          ? `+${row.goal_difference}`
-                          : row.goal_difference}
+                      <td className="num px-1 py-3.5 text-center text-base text-text">
+                        {row.goal_difference > 0 ? `+${row.goal_difference}` : row.goal_difference}
                       </td>
-                      <td className="tnum sticky right-0 bg-white px-3 py-2.5 text-right text-base font-extrabold text-ink">
+                      <td className="num sticky right-0 bg-inherit px-4 py-3.5 text-right text-[28px]">
                         {row.points}
                       </td>
                     </tr>
@@ -219,7 +215,7 @@ export default function KlasemenPage() {
         ))}
 
         {visible.length === 0 && !loading && (
-          <p className="border border-rule bg-white px-4 py-8 text-muted">
+          <p className="py-8 text-muted">
             Klasemen muncul setelah pertandingan pertama selesai.
           </p>
         )}

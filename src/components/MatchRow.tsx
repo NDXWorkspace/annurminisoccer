@@ -6,8 +6,8 @@ import CategoryMark from './CategoryMark';
 import StatusBadge from './StatusBadge';
 
 /**
- * Baris Pertandingan (spesifikasi 7.1). Bukan kartu: satu baris penuh
- * dengan garis 1px di bawahnya. Tap target >= 56px.
+ * Baris pertandingan: satu blok penuh, bukan kartu-kartu kecil.
+ * Penanda jam di kiri menandai setiap gelombang (-> baris di bawahnya jam sama).
  */
 export default function MatchRow({
   match,
@@ -26,75 +26,77 @@ export default function MatchRow({
   const scoreA = match.score_a ?? 0;
   const scoreB = match.score_b ?? 0;
 
-  let toneA = 'font-bold text-ink';
-  let toneB = 'font-bold text-ink';
+  let toneA = 'font-bold text-text';
+  let toneB = 'font-bold text-text';
   if (isFinished) {
     if (scoreA > scoreB) {
-      toneA = 'font-extrabold text-ink';
+      toneA = 'font-extrabold text-text';
       toneB = 'font-medium text-muted';
     } else if (scoreB > scoreA) {
       toneA = 'font-medium text-muted';
-      toneB = 'font-extrabold text-ink';
+      toneB = 'font-extrabold text-text';
     }
   }
 
-  const scoreLabel = `${a?.name ?? 'Tim A'} ${scoreA}, ${b?.name ?? 'Tim B'} ${scoreB}`;
-
   return (
     <article
-      className={`border-b border-rule bg-white px-4 py-3 ${
-        isLive ? 'border-l-4 border-l-whistle bg-blue-tint' : ''
+      className={`mb-2.5 overflow-hidden rounded-[26px] border transition-colors duration-300 ${
+        isLive
+          ? 'border-yellow/35 bg-gradient-to-r from-yellow/10 to-blue/5'
+          : 'border-line bg-white/[0.025] hover:border-blue/35 hover:bg-blue/[0.07]'
       }`}
     >
-      <div className="flex items-center justify-between gap-3">
-        <p className="font-mono text-[13px] text-muted">
-          {code} · {formatTime(match.kickoff_time)}
-          {showCategory && match.category ? (
-            <>
-              {' · '}
-              <CategoryMark category={match.category} field={match.field} />
-            </>
-          ) : match.field ? (
-            <> · Lapangan {match.field}</>
-          ) : null}
-        </p>
-        <StatusBadge status={match.status} />
-      </div>
-
-      <div className="mt-2 flex min-h-[56px] items-center gap-3">
-        <Monogram name={a?.name ?? 'Tim A'} shortName={a?.short_name} color={a?.color} />
-        <div className="min-w-0 flex-1">
-          <Link
-            href={`/tim/${match.team_a_id}`}
-            className={`block truncate font-display text-[22px] leading-tight ${toneA}`}
-          >
-            {a?.name ?? 'Tim A'}
-          </Link>
+      <div className="px-5 py-4">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <span className="label text-muted">{code}</span>
+          <span className="label text-muted">{formatTime(match.kickoff_time)}</span>
+          {showCategory && match.category && (
+            <CategoryMark category={match.category} field={match.field} />
+          )}
+          <span className="ml-auto">
+            <StatusBadge status={match.status} />
+          </span>
         </div>
 
-        {isLive || isFinished ? (
-          <p
-            className="score-display shrink-0 text-5xl"
-            aria-live="polite"
-            aria-label={scoreLabel}
-          >
-            {scoreA}–{scoreB}
-          </p>
-        ) : (
-          <p className="score-display shrink-0 text-5xl text-muted" aria-label="Belum mulai">
-            –:–
-          </p>
-        )}
+        <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+          <div className={`flex items-center gap-3 ${toneA}`}>
+            <Link href={`/tim/${match.team_a_id}`} className="min-w-0">
+              <Monogram name={a?.name ?? 'Tim A'} shortName={a?.short_name} color={a?.color} />
+            </Link>
+            <Link
+              href={`/tim/${match.team_a_id}`}
+              className="truncate font-display text-[19px] leading-tight"
+            >
+              {a?.name ?? 'Tim A'}
+            </Link>
+          </div>
 
-        <div className="min-w-0 flex-1 text-right">
-          <Link
-            href={`/tim/${match.team_b_id}`}
-            className={`block truncate font-display text-[22px] leading-tight ${toneB}`}
-          >
-            {b?.name ?? 'Tim B'}
-          </Link>
+          {isLive || isFinished ? (
+            <p
+              className="num flash flash-on flex items-center gap-2 text-[34px] text-text"
+              aria-live="polite"
+              aria-label={`${a?.name ?? 'Tim A'} ${scoreA}, ${b?.name ?? 'Tim B'} ${scoreB}`}
+            >
+              {scoreA}
+              <span className="font-medium text-muted">–</span>
+              {scoreB}
+            </p>
+          ) : (
+            <p className="num text-xl font-semibold tracking-normal text-muted">vs</p>
+          )}
+
+          <div className={`flex flex-row-reverse items-center gap-3 text-right ${toneB}`}>
+            <Link href={`/tim/${match.team_b_id}`} className="min-w-0">
+              <Monogram name={b?.name ?? 'Tim B'} shortName={b?.short_name} color={b?.color} />
+            </Link>
+            <Link
+              href={`/tim/${match.team_b_id}`}
+              className="truncate font-display text-[19px] leading-tight"
+            >
+              {b?.name ?? 'Tim B'}
+            </Link>
+          </div>
         </div>
-        <Monogram name={b?.name ?? 'Tim B'} shortName={b?.short_name} color={b?.color} />
       </div>
     </article>
   );

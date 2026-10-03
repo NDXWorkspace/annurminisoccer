@@ -15,9 +15,9 @@ export default function LivePage() {
   const [lastUpdated, setLastUpdated] = useState<string>('');
   const [offline, setOffline] = useState(false);
 
-  const fetchLiveScores = async (isSilent = false) => {
+  const load = async (initial = false) => {
     try {
-      if (!isSilent) setLoading(true);
+      if (initial) setLoading(true);
       const res = await fetch('/api/matches', { cache: 'no-store' });
       if (!res.ok) throw new Error('Gagal memuat skor');
       const data: ApiResponse<MatchWithTeams[]> = await res.json();
@@ -26,22 +26,22 @@ export default function LivePage() {
         setLastUpdated(
           new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
         );
+        setOffline(false);
       }
-      setOffline(false);
     } catch {
       setOffline(true);
     } finally {
-      setLoading(false);
+      if (initial) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchLiveScores();
+    load(true);
     const id = setInterval(() => {
-      if (!document.hidden) fetchLiveScores(true);
+      if (!document.hidden) load();
     }, 5000);
     const onVisible = () => {
-      if (!document.hidden) fetchLiveScores(true);
+      if (!document.hidden) load();
     };
     document.addEventListener('visibilitychange', onVisible);
     return () => {
@@ -63,19 +63,18 @@ export default function LivePage() {
     .slice(0, 1);
 
   return (
-    <div className="mx-auto w-full max-w-[1080px] px-4 py-8">
-      <div className="rule-double flex flex-wrap items-end justify-between gap-3 pt-3">
-        <h1 className="font-display text-[32px] font-extrabold leading-none text-ink md:text-[44px]">
+    <div className="wrap pt-12 pb-8">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <h1 className="rule-title font-display text-[30px] font-extrabold md:text-[46px]">
           Skor live
         </h1>
         <div className="flex items-center gap-3">
-          <p className="font-mono text-[13px] text-muted">
+          <span className="label text-muted" aria-live="polite">
             {lastUpdated ? `Diperbarui ${lastUpdated}` : 'Memuat…'}
-          </p>
+          </span>
           <button
-            onClick={() => fetchLiveScores()}
-            aria-label="Muat ulang skor"
-            className="h-11 rounded-[4px] border-[1.5px] border-ink px-4 font-display text-sm font-bold uppercase text-ink"
+            onClick={() => load()}
+            className="label rounded-full border border-line px-4 py-2.5 text-muted transition-colors hover:border-blue/50 hover:text-text"
           >
             Muat ulang
           </button>
@@ -83,55 +82,65 @@ export default function LivePage() {
       </div>
 
       {offline && (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border border-rule bg-white px-4 py-2">
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-full border border-line bg-surface px-5 py-2.5">
           <p className="text-sm text-muted">
             Koneksi terputus. Menampilkan data terakhir
             {lastUpdated ? ` (${lastUpdated})` : ''}.
           </p>
-          <button onClick={() => fetchLiveScores()} className="h-11 font-display text-sm font-bold uppercase text-blue">
+          <button onClick={() => load()} className="label text-blue">
             Muat ulang
           </button>
         </div>
       )}
 
       {loading && matches.length === 0 ? (
-        <div className="mt-4 border border-rule bg-white px-4 py-8">
-          <div className="h-8 w-1/2 bg-rule" />
-          <div className="mt-3 h-4 w-1/3 bg-rule" />
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
+          {[0, 1].map((i) => (
+            <div key={i} className="h-40 animate-pulse rounded-[32px] bg-raise" />
+          ))}
         </div>
       ) : (
-        <div className="mt-6 space-y-10">
+        <div className="mt-6 space-y-12">
           <section aria-label="Sedang berlangsung">
             {live.length > 0 ? (
-              <div className="grid gap-6 md:grid-cols-2">
-                {live.map((m) => (
-                  <div key={m.id} className="border border-rule bg-white">
-                    <div className="flex items-center justify-between gap-2 border-b border-rule px-4 py-2">
+              <div className="grid gap-4 md:grid-cols-2">
+                {live.map((m, i) => (
+                  <article
+                    key={m.id}
+                    style={{ ['--i' as string]: i }}
+                    className="animate-enter relative isolate overflow-hidden rounded-[32px] bg-gradient-to-bl from-raise to-ink p-6 before:absolute before:inset-0 before:-z-10 before:rounded-[32px] before:p-[1.5px] before:bg-[conic-gradient(from_var(--a),transparent_0_60%,var(--color-yellow)_82%,transparent_100%)] before:[-webkit-mask:linear-gradient(#000_0_0)_content-box,linear-gradient(#000_0_0)] before:[mask-composite:exclude] before:[animation:spin_5s_linear_infinite]"
+                  >
+                    <div className="flex items-center justify-between gap-3">
                       {m.category ? (
                         <CategoryMark category={m.category} field={m.field} />
                       ) : (
-                        <span className="font-mono text-xs text-muted">
+                        <span className="label text-muted">
                           {m.field ? `Lapangan ${m.field}` : ''}
                         </span>
                       )}
                       <StatusBadge status={m.status} />
                     </div>
-                    <div className="flex items-center gap-3 px-4 py-4">
-                      <p className="min-w-0 flex-1 truncate font-display text-2xl font-bold text-ink">
+                    <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                      <p className="truncate font-display text-[19px] font-bold leading-tight">
                         {m.team_a?.name ?? 'Tim A'}
                       </p>
                       <p
-                        className="score-display shrink-0 text-[64px] text-ink md:text-[96px]"
+                        className="num flash flash-on flex items-center gap-2 text-[clamp(64px,18vw,112px)] leading-none"
                         aria-live="polite"
                         aria-label={`${m.team_a?.name ?? 'Tim A'} ${m.score_a ?? 0}, ${m.team_b?.name ?? 'Tim B'} ${m.score_b ?? 0}`}
                       >
-                        {m.score_a ?? 0}–{m.score_b ?? 0}
+                        {m.score_a ?? 0}
+                        <span className="font-medium text-muted">–</span>
+                        {m.score_b ?? 0}
                       </p>
-                      <p className="min-w-0 flex-1 truncate text-right font-display text-2xl font-bold text-ink">
+                      <p className="truncate text-right font-display text-[19px] font-bold leading-tight">
                         {m.team_b?.name ?? 'Tim B'}
                       </p>
                     </div>
-                  </div>
+                    <p className="label mt-4 text-muted">
+                      {m.match_date} · {m.kickoff_time.slice(0, 5)}
+                    </p>
+                  </article>
                 ))}
               </div>
             ) : (
@@ -144,13 +153,13 @@ export default function LivePage() {
                 }
                 action={
                   next.length > 0 ? (
-                    <div className="mx-auto max-w-sm">
+                    <div className="mx-auto max-w-sm text-left">
                       <MatchCard match={next[0]} compact />
                     </div>
                   ) : (
                     <Link
                       href="/jadwal"
-                      className="inline-flex h-12 items-center rounded-[4px] border-[1.5px] border-ink px-5 font-display text-base font-bold uppercase text-ink"
+                      className="label inline-flex h-12 items-center rounded-full border border-line px-6 text-text"
                     >
                       Lihat jadwal
                     </Link>
@@ -162,13 +171,15 @@ export default function LivePage() {
 
           {done.length > 0 && (
             <section aria-label="Hasil terbaru">
-              <div className="flex items-baseline justify-between gap-3">
-                <h2 className="font-display text-2xl font-extrabold text-ink">Hasil terbaru</h2>
-                <Link href="/klasemen" className="font-display text-base font-bold uppercase text-blue">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="rule-title font-display text-2xl font-extrabold">
+                  Hasil terbaru
+                </h2>
+                <Link href="/klasemen" className="label text-blue">
                   Klasemen
                 </Link>
               </div>
-              <div className="mt-3 grid gap-4 md:grid-cols-2">
+              <div className="mt-4 grid gap-3 md:grid-cols-2">
                 {done.map((m) => (
                   <MatchCard key={m.id} match={m} compact />
                 ))}

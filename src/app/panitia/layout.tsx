@@ -11,6 +11,7 @@ const TABS = [
 ];
 
 const MORE = [
+  { name: 'Pemain', path: '/panitia/pemain', superadmin: true },
   { name: 'Pengaturan', path: '/panitia/pengaturan' },
   { name: 'Pengguna', path: '/panitia/pengguna', superadmin: true },
 ];
@@ -77,7 +78,7 @@ export default function PanitiaLayout({ children }: { children: React.ReactNode 
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-paper">
+      <div className="flex min-h-screen items-center justify-center bg-ink">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue border-t-transparent" />
       </div>
     );
@@ -85,11 +86,11 @@ export default function PanitiaLayout({ children }: { children: React.ReactNode 
 
   if (!isAuthenticated) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-paper p-6 text-center">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-ink p-6 text-center">
         <p className="text-sm text-muted">Sesi berakhir atau belum masuk.</p>
         <Link
           href="/panitia/masuk"
-          className="inline-flex h-12 items-center rounded-[4px] bg-blue px-5 font-display text-base font-bold uppercase text-white"
+          className="label inline-flex h-12 items-center rounded-full bg-blue px-6 text-ink"
         >
           Ke halaman masuk
         </Link>
@@ -100,28 +101,28 @@ export default function PanitiaLayout({ children }: { children: React.ReactNode 
   const visibleMore = MORE.filter((l) => !l.superadmin || currentUser?.role === 'superadmin');
 
   return (
-    <div className="min-h-screen bg-paper">
-      <header className="header-shadow border-b border-rule bg-white">
-        <div className="mx-auto flex h-16 w-full max-w-[1080px] items-center justify-between gap-4 px-4">
-          <Link href="/panitia" className="font-display text-xl font-extrabold text-ink">
+    <div className="min-h-screen bg-ink">
+      <header className="sticky top-0 z-40 border-b border-line bg-surface/95 backdrop-blur-md">
+        <div className="wrap flex h-14 items-center justify-between gap-3">
+          <Link href="/panitia" className="font-display text-[17px] font-extrabold">
             Panitia
           </Link>
           <div className="flex items-center gap-3">
             {currentUser && (
-              <span className="font-mono text-[13px] text-muted">
+              <span className="label text-muted">
                 {currentUser.username} · {currentUser.role}
               </span>
             )}
             <button
               onClick={handleLogout}
-              className="h-11 rounded-[4px] border-[1.5px] border-alert px-4 font-display text-sm font-bold uppercase text-alert"
+              className="label h-9 rounded-full border border-danger/40 px-4 text-danger"
             >
               Keluar
             </button>
           </div>
         </div>
-        <nav aria-label="Tab panitia" className="mx-auto w-full max-w-[1080px] px-4">
-          <div className="flex gap-6 overflow-x-auto">
+        <nav aria-label="Tab panitia" className="wrap">
+          <div className="flex gap-1 overflow-x-auto">
             {[...TABS, ...visibleMore].map((link) => {
               const isActive =
                 pathname === link.path ||
@@ -131,8 +132,10 @@ export default function PanitiaLayout({ children }: { children: React.ReactNode 
                   key={link.path}
                   href={link.path}
                   aria-current={isActive ? 'page' : undefined}
-                  className={`flex h-12 shrink-0 items-center font-display text-base font-bold uppercase ${
-                    isActive ? 'border-b-[3px] border-blue text-blue' : 'text-muted'
+                  className={`label shrink-0 border-b-2 px-4 py-3 transition-colors ${
+                    isActive
+                      ? 'border-blue text-text'
+                      : 'border-transparent text-muted hover:text-text'
                   }`}
                 >
                   {link.name}
@@ -143,7 +146,7 @@ export default function PanitiaLayout({ children }: { children: React.ReactNode 
         </nav>
       </header>
 
-      <main className="mx-auto w-full max-w-[1080px] px-4 py-6">{children}</main>
+      <main className="wrap py-6">{children}</main>
     </div>
   );
 }

@@ -1,90 +1,61 @@
 import type { MatchWithTeams } from '@/lib/types';
-import { formatTime, formatShortDate } from '@/lib/utils';
+import { formatTime } from '@/lib/utils';
 import Monogram from './Monogram';
 import StatusBadge from './StatusBadge';
 import Link from 'next/link';
 
-interface MatchCardProps {
+/** Kartu ringkas untuk daftar hasil terbaru. */
+export default function MatchCard({
+  match,
+  compact = false,
+}: {
   match: MatchWithTeams;
   compact?: boolean;
-  priority?: boolean;
-}
-
-export default function MatchCard({ match, compact = false }: MatchCardProps) {
+}) {
   const isLive = match.status === 'live' || match.status === 'halftime';
-  const isFinished = match.status === 'finished';
+  const showScore = isLive || match.status === 'finished';
 
   return (
-    <article
-      className={`border bg-white ${isLive ? 'border-l-4 border-l-whistle border-rule' : 'border-rule'}`}
-    >
-      <header
-        className={`flex items-center justify-between gap-2 border-b border-rule ${compact ? 'px-3 py-1.5' : 'px-4 py-2'}`}
-      >
-        <span className="truncate font-mono text-xs text-muted">
-          {formatShortDate(match.match_date)} · {formatTime(match.kickoff_time)}
+    <article className="rounded-[24px] border border-line bg-surface p-4">
+      <div className="flex items-center justify-between gap-2">
+        <span className="label text-muted">
+          {formatTime(match.kickoff_time)}
           {match.field ? ` · Lapangan ${match.field}` : ''}
         </span>
         <StatusBadge status={match.status} />
-      </header>
+      </div>
 
-      <div className={`flex items-stretch ${compact ? 'px-3 py-3' : 'px-4 py-4'}`}>
-        <Side team={match.team_a} teamId={match.team_a_id} compact={compact} />
-        <div className="flex min-w-[64px] flex-col items-center justify-center px-1">
-          {isLive || isFinished ? (
-            <p
-              className="score-display text-4xl text-ink"
-              aria-live="polite"
-              aria-label={`${match.team_a?.name ?? 'Tim A'} ${match.score_a ?? 0}, ${match.team_b?.name ?? 'Tim B'} ${match.score_b ?? 0}`}
-            >
-              {match.score_a ?? 0}–{match.score_b ?? 0}
-            </p>
-          ) : (
-            <p className="score-display text-3xl text-muted">{formatTime(match.kickoff_time)}</p>
-          )}
-          {!compact && (
-            <span className="mt-1 font-mono text-xs text-muted">
-              {match.stage === 'grup'
-                ? `Grup ${match.group_name ?? '-'}`
-                : match.stage === 'semifinal'
-                  ? 'Semifinal'
-                  : 'Final'}
-            </span>
-          )}
-        </div>
-        <Side team={match.team_b} teamId={match.team_b_id} compact={compact} />
+      <div className="mt-3 flex items-center gap-3">
+        <Link href={`/tim/${match.team_a_id}`} className="min-w-0 flex-1 text-right">
+          <span
+            className={`block truncate font-display leading-tight ${
+              compact ? 'text-sm' : 'text-base'
+            }`}
+          >
+            {match.team_a?.name ?? 'Tim A'}
+          </span>
+        </Link>
+        <Monogram name={match.team_a?.name ?? 'A'} shortName={match.team_a?.short_name} size={compact ? 32 : 40} />
+        {showScore ? (
+          <p className="num flex items-center gap-1.5 text-3xl" aria-live="polite">
+            {match.score_a ?? 0}
+            <span className="font-medium text-muted">–</span>
+            {match.score_b ?? 0}
+          </p>
+        ) : (
+          <p className="num text-xl text-muted">vs</p>
+        )}
+        <Monogram name={match.team_b?.name ?? 'B'} shortName={match.team_b?.short_name} size={compact ? 32 : 40} />
+        <Link href={`/tim/${match.team_b_id}`} className="min-w-0 flex-1">
+          <span
+            className={`block truncate font-display leading-tight ${
+              compact ? 'text-sm' : 'text-base'
+            }`}
+          >
+            {match.team_b?.name ?? 'Tim B'}
+          </span>
+        </Link>
       </div>
     </article>
-  );
-}
-
-function Side({
-  team,
-  teamId,
-  compact,
-}: {
-  team?: MatchWithTeams['team_a'];
-  teamId: string;
-  compact: boolean;
-}) {
-  return (
-    <div className="flex flex-1 flex-col items-center gap-1.5">
-      <Link href={`/tim/${teamId}`} aria-label={team?.name ?? 'Tim'}>
-        <Monogram
-          name={team?.name ?? 'Tim'}
-          shortName={team?.short_name}
-          color={team?.color}
-          size={compact ? 32 : 40}
-        />
-      </Link>
-      <Link
-        href={`/tim/${teamId}`}
-        className={`line-clamp-2 text-center font-bold leading-tight text-ink hover:text-blue ${
-          compact ? 'text-xs' : 'text-sm'
-        }`}
-      >
-        {team?.name ?? 'Tim'}
-      </Link>
-    </div>
   );
 }

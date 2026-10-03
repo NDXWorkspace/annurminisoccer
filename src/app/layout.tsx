@@ -1,33 +1,37 @@
 import type { Metadata, Viewport } from "next";
-import { Big_Shoulders, Public_Sans, IBM_Plex_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-// Catatan: "Big Shoulders Display" tidak ada di daftar next/font versi ini,
-// dipakai "Big Shoulders" (kerangka yang sama) sebagai pengganti setara.
-const bigShoulders = Big_Shoulders({
-  subsets: ["latin"],
-  weight: ["700", "800", "900"],
-  variable: "--font-big-shoulders",
+// Font di-host sendiri: build tidak bergantung jaringan, tidak ada
+// permintaan ke Google Fonts saat runtime. Subset latin sudah cukup untuk
+// Bahasa Indonesia (tanpa huruf beraksen di luar latin).
+const bricolage = localFont({
+  src: "./fonts/BricolageGrotesque-latin.woff2",
+  variable: "--font-bricolage",
   display: "swap",
+  weight: "500 800",
+  fallback: ["Segoe UI", "system-ui", "sans-serif"],
 });
 
-const publicSans = Public_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
+const publicSans = localFont({
+  src: "./fonts/PublicSans-latin.woff2",
   variable: "--font-public-sans",
   display: "swap",
+  weight: "400 700",
+  fallback: ["system-ui", "-apple-system", "Segoe UI", "sans-serif"],
 });
 
-const plexMono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["500"],
+const plexMono = localFont({
+  src: "./fonts/IBMPlexMono-latin.woff2",
   variable: "--font-plex-mono",
   display: "swap",
+  weight: "500",
+  fallback: ["ui-monospace", "Menlo", "monospace"],
 });
 
 export const metadata: Metadata = {
   title: {
-    default: "An-Nur Mini Soccer",
+    default: "An-Nur Mini Soccer 2026",
     template: "%s · An-Nur Mini Soccer",
   },
   description:
@@ -35,7 +39,7 @@ export const metadata: Metadata = {
   applicationName: "An-Nur Mini Soccer",
   keywords: ["mini soccer", "turnamen", "An-Nur", "jadwal", "skor"],
   openGraph: {
-    title: "An-Nur Mini Soccer",
+    title: "An-Nur Mini Soccer 2026",
     description: "Turnamen mini soccer An-Nur, 9–10 Oktober 2026.",
     type: "website",
     locale: "id_ID",
@@ -44,8 +48,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#F5F7FA",
-  colorScheme: "light",
+  themeColor: "#05070D",
+  colorScheme: "dark",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -59,7 +63,7 @@ export default function RootLayout({
   return (
     <html
       lang="id"
-      className={`${bigShoulders.variable} ${publicSans.variable} ${plexMono.variable}`}
+      className={`${bricolage.variable} ${publicSans.variable} ${plexMono.variable}`}
     >
       <body className="font-sans antialiased">{children}</body>
     </html>

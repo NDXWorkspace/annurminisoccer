@@ -53,15 +53,16 @@ if (!url || !key) {
 
 const supabase = createClient(url, key);
 
-const [{ data: teams, error: teamsErr }, { data: matches, error: matchesErr }, { data: settings, error: settingsErr }] =
+const [{ data: teams, error: teamsErr }, { data: matches, error: matchesErr }, { data: settings, error: settingsErr }, { data: players, error: playersErr }] =
   await Promise.all([
     supabase.from('teams').select('*').order('group_name').order('name'),
     supabase.from('matches').select('*').order('match_date').order('kickoff_time'),
     supabase.from('event_settings').select('*').limit(1).maybeSingle(),
+    supabase.from('players').select('*').order('team_id').order('jersey_number', { nullsFirst: false }).order('name'),
   ]);
 
-if (teamsErr || matchesErr || settingsErr) {
-  console.error('Gagal membaca database:', teamsErr ?? matchesErr ?? settingsErr);
+if (teamsErr || matchesErr || settingsErr || playersErr) {
+  console.error('Gagal membaca database:', teamsErr ?? matchesErr ?? settingsErr ?? playersErr);
   process.exit(1);
 }
 
@@ -71,6 +72,7 @@ if (!teams?.length) {
 }
 
 const safeMatches = matches ?? [];
+const safePlayers = players ?? [];
 
 const q = (v: unknown) => JSON.stringify(v);
 const ts = (v: string | null) => q(v ?? null);
@@ -91,6 +93,13 @@ const matchLines = safeMatches
 
 const s = settings;
 
+const playersBlock = safePlayers
+  .map(
+    (p) =>
+      `  { id: ${q(p.id)}, team_id: ${q(p.team_id)}, name: ${q(p.name)}, jersey_number: ${p.jersey_number ?? 'null'}, position: ${ts(p.position)}, created_at: CREATED_AT },`
+  )
+  .join('\n');
+
 const file = `// =============================================
 // Seed data — render instan tanpa menunggu jaringan
 // =============================================
@@ -102,7 +111,7 @@ const file = `// =============================================
 // Terakhir disegarkan: ${new Date().toISOString().slice(0, 10)}
 // =============================================
 
-import { EventSettings, MatchWithTeams, Team } from './types';
+import { EventSettings, MatchWithTeams, Player, Team } from './types';
 
 const CREATED_AT = ${q(teams[0]?.created_at ?? new Date().toISOString())};
 const UPDATED_AT = ${q(safeMatches[0]?.updated_at ?? new Date().toISOString())};
@@ -133,6 +142,16 @@ export function seedTeamMatches(teamId: string): MatchWithTeams[] {
   return SEED_MATCHES.filter((m) => m.team_a_id === teamId || m.team_b_id === teamId).sort((a, b) =>
     \`\${b.match_date}\${b.kickoff_time}\`.localeCompare(\`\${a.match_date}\${a.kickoff_time}\`)
   );
+}
+
+/** Seluruh pemain untuk render instan. */
+export const SEED_PLAYERS: Player[] = [
+${playersBlock}
+];
+
+/** Pemain seorang tim. */
+export function seedTeamPlayers(teamId: string): Player[] {
+  return SEED_PLAYERS.filter((p) => p.team_id === teamId);
 }
 
 export const SEED_SETTINGS: EventSettings = {

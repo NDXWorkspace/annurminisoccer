@@ -37,6 +37,17 @@ export interface MatchWithTeams extends Match {
   team_b: Team;
 }
 
+export type PlayerPosition = 'GK' | 'DF' | 'MF' | 'FW';
+
+export interface Player {
+  id: string;
+  team_id: string;
+  name: string;
+  jersey_number: number | null;
+  position: PlayerPosition | null;
+  created_at: string;
+}
+
 export interface EventSettings {
   id: string;
   event_name: string;

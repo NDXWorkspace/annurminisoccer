@@ -30,7 +30,7 @@ export default function JadwalPanitia() {
     category: 'U10',
   });
 
-  const fetchData = async () => {
+  const load = async () => {
     try {
       const [teamsRes, matchesRes] = await Promise.all([
         fetch('/api/teams', { cache: 'no-store' }),
@@ -44,11 +44,12 @@ export default function JadwalPanitia() {
       }
       if (teamsData.data) setTeams(teamsData.data);
       if (matchesData.data) {
-        const sorted = (matchesData.data as MatchWithTeams[]).sort((a, b) => {
-          if (a.match_date !== b.match_date) return a.match_date.localeCompare(b.match_date);
-          return (a.kickoff_time || '').localeCompare(b.kickoff_time || '');
-        });
-        setMatches(sorted);
+        setMatches(
+          (matchesData.data as MatchWithTeams[]).sort((a, b) => {
+            if (a.match_date !== b.match_date) return a.match_date.localeCompare(b.match_date);
+            return (a.kickoff_time || '').localeCompare(b.kickoff_time || '');
+          })
+        );
       }
       setLoadError(null);
     } catch {
@@ -59,12 +60,11 @@ export default function JadwalPanitia() {
   };
 
   useEffect(() => {
-    void fetchData();
+    void load();
   }, []);
 
   const categoryTeams = teams.filter((t) => (t.category ?? 'U10') === formData.category);
 
-  // Peringatan bentrok: lapangan sama, tanggal dan jam sama.
   const clash = matches.find(
     (m) =>
       m.id !== editingId &&
@@ -74,13 +74,7 @@ export default function JadwalPanitia() {
   );
 
   const setCategory = (category: string) => {
-    setFormData((f) => ({
-      ...f,
-      category,
-      field: fieldFor(category),
-      team_a_id: '',
-      team_b_id: '',
-    }));
+    setFormData((f) => ({ ...f, category, field: fieldFor(category), team_a_id: '', team_b_id: '' }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -91,15 +85,14 @@ export default function JadwalPanitia() {
     }
     try {
       const url = editingId ? `/api/matches/${editingId}` : '/api/matches';
-      const method = editingId ? 'PUT' : 'POST';
       const res = await fetch(url, {
-        method,
+        method: editingId ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...formData, field: fieldFor(formData.category) }),
       });
       if (res.ok) {
         closeForm();
-        fetchData();
+        load();
         setMessage({
           type: 'success',
           text: editingId ? 'Jadwal berhasil diperbarui.' : 'Jadwal berhasil ditambahkan.',
@@ -120,7 +113,7 @@ export default function JadwalPanitia() {
       const res = await fetch(`/api/matches/${deletingMatch.id}`, { method: 'DELETE' });
       if (res.ok) {
         setDeletingMatch(null);
-        fetchData();
+        load();
         setMessage({ type: 'success', text: 'Pertandingan berhasil dihapus.' });
       } else {
         const err = await res.json().catch(() => ({}));
@@ -170,12 +163,7 @@ export default function JadwalPanitia() {
   };
 
   if (isLoading) {
-    return (
-      <div className="border border-rule bg-white px-4 py-8">
-        <div className="h-8 w-1/2 bg-rule" />
-        <div className="mt-3 h-4 w-1/3 bg-rule" />
-      </div>
-    );
+    return <div className="h-40 animate-pulse rounded-[28px] bg-raise" />;
   }
 
   const grouped = matches.reduce(
@@ -187,119 +175,119 @@ export default function JadwalPanitia() {
     {} as Record<string, MatchWithTeams[]>
   );
 
-  const inputCls =
-    'h-[52px] w-full rounded-[2px] border-[1.5px] border-rule bg-white px-3 text-base text-ink outline-none focus:border-blue';
+  const input =
+    'h-12 w-full rounded-full border border-line bg-surface px-4 text-base text-text outline-none transition-colors focus:border-blue';
 
   return (
     <div className="space-y-6">
       {loadError && (
-        <div className="flex flex-wrap items-center justify-between gap-3 border border-alert bg-white px-4 py-3">
-          <p className="text-sm text-alert">{loadError}</p>
-          <button
-            onClick={() => {
-              setIsLoading(true);
-              fetchData();
-            }}
-            className="h-11 rounded-[4px] border-[1.5px] border-ink px-4 font-display text-sm font-bold uppercase text-ink"
-          >
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-full border border-danger/40 bg-danger/10 px-5 py-3">
+          <p className="text-sm text-danger">{loadError}</p>
+          <button onClick={() => load()} className="label text-text">
             Coba lagi
           </button>
         </div>
       )}
       {message && (
-        <p className={`border border-rule bg-white px-4 py-3 text-sm ${message.type === 'success' ? 'text-blue' : 'text-alert'}`}>
+        <p
+          className={`rounded-full border border-line px-5 py-3 text-sm ${
+            message.type === 'success' ? 'text-blue' : 'text-danger'
+          }`}
+        >
           {message.text}
         </p>
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-3xl font-extrabold text-ink">Jadwal</h1>
+        <h1 className="rule-title font-display text-3xl font-extrabold">Jadwal</h1>
         <button
           onClick={() => openForm()}
-          className="h-12 rounded-[4px] bg-blue px-5 font-display text-base font-bold uppercase text-white hover:bg-ink"
+          className="label h-12 rounded-full bg-blue px-6 text-ink"
         >
           Tambah pertandingan
         </button>
       </div>
 
       {isFormOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 p-4">
-          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto border border-rule bg-white">
-            <div className="flex items-center justify-between border-b border-rule px-4 py-3">
-              <h2 className="font-display text-xl font-extrabold text-ink">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[28px] border border-line bg-surface">
+            <div className="flex items-center justify-between border-b border-line px-5 py-3">
+              <h2 className="font-display text-xl font-extrabold">
                 {editingId ? 'Ubah jadwal' : 'Tambah jadwal'}
               </h2>
-              <button
-                onClick={closeForm}
-                className="flex h-11 w-11 items-center justify-center text-ink"
-                aria-label="Tutup"
-              >
-                ✕
+              <button onClick={closeForm} className="label h-9 px-3 text-muted" aria-label="Tutup">
+                Tutup
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="space-y-4 px-4 py-4">
+            <form onSubmit={handleSubmit} className="space-y-4 px-5 py-4">
               <div>
-                <span className="label block text-ink">Kategori</span>
-                <div className="mt-1.5 grid grid-cols-2 border border-rule" role="group" aria-label="Kategori">
+                <span className="label block text-muted">Kategori</span>
+                <div className="pill mt-1.5 w-full gap-0.5 p-1" role="group" aria-label="Kategori">
                   {['U10', 'U12'].map((c) => (
                     <button
                       key={c}
                       type="button"
                       onClick={() => setCategory(c)}
                       aria-pressed={formData.category === c}
-                      className={`h-12 font-display text-base font-bold uppercase ${
-                        formData.category === c ? 'bg-blue text-white' : 'text-ink'
+                      className={`label h-11 flex-1 rounded-full ${
+                        formData.category === c ? 'bg-text text-ink' : 'text-muted'
                       }`}
                     >
                       {c}
                     </button>
                   ))}
                 </div>
-                <p className="mt-1.5 font-mono text-[13px] text-muted">
+                <p className="label mt-1.5 text-muted">
                   Lapangan otomatis: {formData.category} → Lapangan {fieldFor(formData.category)}
                 </p>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label htmlFor="f-date" className="label block text-ink">Tanggal</label>
+                  <label htmlFor="f-date" className="label block text-muted">
+                    Tanggal
+                  </label>
                   <input
                     id="f-date"
                     type="date"
                     required
                     value={formData.match_date}
                     onChange={(e) => setFormData({ ...formData, match_date: e.target.value })}
-                    className={`${inputCls} mt-1.5`}
+                    className={`${input} mt-1.5`}
                   />
                 </div>
                 <div>
-                  <label htmlFor="f-time" className="label block text-ink">Jam</label>
+                  <label htmlFor="f-time" className="label block text-muted">
+                    Jam
+                  </label>
                   <input
                     id="f-time"
                     type="time"
                     required
                     value={formData.kickoff_time}
                     onChange={(e) => setFormData({ ...formData, kickoff_time: e.target.value })}
-                    className={`${inputCls} mt-1.5`}
+                    className={`${input} mt-1.5`}
                   />
                 </div>
               </div>
 
               {clash && (
-                <p role="alert" className="border border-alert px-3 py-2 text-sm text-alert">
+                <p role="alert" className="rounded-full border border-danger/40 bg-danger/10 px-4 py-2.5 text-sm text-danger">
                   Bentrok dengan {clash.team_a?.short_name}–{clash.team_b?.short_name} jam{' '}
                   {formatTime(clash.kickoff_time)} di lapangan yang sama.
                 </p>
               )}
 
               <div>
-                <label htmlFor="f-teama" className="label block text-ink">Tim A ({formData.category})</label>
+                <label htmlFor="f-teama" className="label block text-muted">
+                  Tim A ({formData.category})
+                </label>
                 <select
                   id="f-teama"
                   required
                   value={formData.team_a_id}
                   onChange={(e) => setFormData({ ...formData, team_a_id: e.target.value })}
-                  className={`${inputCls} mt-1.5`}
+                  className={`${input} mt-1.5`}
                 >
                   <option value="">Pilih tim A</option>
                   {categoryTeams.map((t) => (
@@ -310,13 +298,15 @@ export default function JadwalPanitia() {
                 </select>
               </div>
               <div>
-                <label htmlFor="f-teamb" className="label block text-ink">Tim B ({formData.category})</label>
+                <label htmlFor="f-teamb" className="label block text-muted">
+                  Tim B ({formData.category})
+                </label>
                 <select
                   id="f-teamb"
                   required
                   value={formData.team_b_id}
                   onChange={(e) => setFormData({ ...formData, team_b_id: e.target.value })}
-                  className={`${inputCls} mt-1.5`}
+                  className={`${input} mt-1.5`}
                 >
                   <option value="">Pilih tim B</option>
                   {categoryTeams.map((t) => (
@@ -329,12 +319,14 @@ export default function JadwalPanitia() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label htmlFor="f-stage" className="label block text-ink">Fase</label>
+                  <label htmlFor="f-stage" className="label block text-muted">
+                    Fase
+                  </label>
                   <select
                     id="f-stage"
                     value={formData.stage}
                     onChange={(e) => setFormData({ ...formData, stage: e.target.value as MatchStage })}
-                    className={`${inputCls} mt-1.5`}
+                    className={`${input} mt-1.5`}
                   >
                     <option value="grup">Grup</option>
                     <option value="semifinal">Semifinal</option>
@@ -342,12 +334,14 @@ export default function JadwalPanitia() {
                   </select>
                 </div>
                 <div>
-                  <label htmlFor="f-group" className="label block text-ink">Grup</label>
+                  <label htmlFor="f-group" className="label block text-muted">
+                    Grup
+                  </label>
                   <select
                     id="f-group"
                     value={formData.group_name || ''}
                     onChange={(e) => setFormData({ ...formData, group_name: e.target.value })}
-                    className={`${inputCls} mt-1.5`}
+                    className={`${input} mt-1.5`}
                   >
                     <option value="">Tanpa grup</option>
                     {['A', 'B', 'C', 'D'].map((g) => (
@@ -359,17 +353,17 @@ export default function JadwalPanitia() {
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-3 pt-1">
                 <button
                   type="button"
                   onClick={closeForm}
-                  className="h-12 flex-1 rounded-[4px] border-[1.5px] border-ink font-display text-base font-bold uppercase text-ink"
+                  className="label h-12 flex-1 rounded-full border border-line"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="h-12 flex-1 rounded-[4px] bg-blue font-display text-base font-bold uppercase text-white hover:bg-ink"
+                  className="label h-12 flex-1 rounded-full bg-blue text-ink"
                 >
                   Simpan
                 </button>
@@ -380,42 +374,40 @@ export default function JadwalPanitia() {
       )}
 
       {Object.keys(grouped).length === 0 ? (
-        <p className="border border-rule bg-white px-4 py-8 text-muted">
-          Belum ada jadwal pertandingan.
-        </p>
+        <p className="panel px-5 py-8 text-muted">Belum ada jadwal pertandingan.</p>
       ) : (
         <div className="space-y-8">
           {Object.keys(grouped)
             .sort()
             .map((date) => (
               <section key={date} aria-label={formatShortDate(date)}>
-                <h2 className="font-display text-2xl font-extrabold text-ink">
+                <h2 className="rule-title font-display text-xl font-extrabold">
                   {formatShortDate(date)}
                 </h2>
-                <div className="mt-2 border-t border-rule">
+                <div className="mt-3 overflow-hidden rounded-[28px] border border-line">
                   {grouped[date].map((m) => (
                     <div
                       key={m.id}
-                      className="flex flex-wrap items-center gap-3 border-b border-rule bg-white px-4 py-3"
+                      className="flex flex-wrap items-center gap-3 border-b border-line bg-surface px-5 py-3 last:border-0"
                     >
-                      <span className="tnum w-14 shrink-0 font-mono text-[13px] text-muted">
+                      <span className="label w-14 flex-none text-muted">
                         {formatTime(m.kickoff_time)}
                       </span>
-                      <CategoryMark category={m.category ?? (m.field === '2' ? 'U12' : 'U10')} field={m.field} />
-                      <span className="min-w-0 flex-1 text-[15px] font-bold text-ink">
+                      <CategoryMark category={m.category ?? 'U10'} field={m.field} />
+                      <span className="min-w-0 flex-1 truncate font-bold">
                         {m.team_a?.name} {m.score_a}–{m.score_b} {m.team_b?.name}
                       </span>
                       <StatusBadge status={m.status} />
                       <span className="flex gap-2">
                         <button
                           onClick={() => openForm(m)}
-                          className="h-11 rounded-[4px] border-[1.5px] border-ink px-4 font-display text-sm font-bold uppercase text-ink"
+                          className="label h-11 rounded-full border border-line px-4"
                         >
                           Ubah
                         </button>
                         <button
                           onClick={() => setDeletingMatch(m)}
-                          className="h-11 rounded-[4px] border-[1.5px] border-alert px-4 font-display text-sm font-bold uppercase text-alert"
+                          className="label h-11 rounded-full border border-danger/40 px-4 text-danger"
                         >
                           Hapus
                         </button>
@@ -429,19 +421,19 @@ export default function JadwalPanitia() {
       )}
 
       {deletingMatch && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 p-4">
-          <div className="w-full max-w-sm border border-rule bg-white p-6 text-center">
-            <h3 className="font-display text-xl font-extrabold text-ink">Hapus pertandingan?</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-sm rounded-[28px] border border-line bg-surface p-6 text-center">
+            <h3 className="font-display text-xl font-extrabold">Hapus pertandingan?</h3>
             <p className="mt-2 text-sm text-muted">
-              {deletingMatch.team_a?.name} lawan {deletingMatch.team_b?.name} akan
-              dihapus permanen.
+              {deletingMatch.team_a?.name} lawan {deletingMatch.team_b?.name} akan dihapus
+              permanen.
             </p>
-            <div className="mt-4 flex gap-3">
+            <div className="mt-5 flex gap-3">
               <button
                 type="button"
                 disabled={isDeleting}
                 onClick={() => setDeletingMatch(null)}
-                className="h-12 flex-1 rounded-[4px] border-[1.5px] border-ink font-display text-base font-bold uppercase text-ink"
+                className="label h-12 flex-1 rounded-full border border-line"
               >
                 Batal
               </button>
@@ -449,7 +441,7 @@ export default function JadwalPanitia() {
                 type="button"
                 disabled={isDeleting}
                 onClick={confirmDelete}
-                className="h-12 flex-1 rounded-[4px] bg-alert font-display text-base font-bold uppercase text-white"
+                className="label h-12 flex-1 rounded-full bg-danger text-white"
               >
                 {isDeleting ? 'Menghapus…' : 'Hapus'}
               </button>

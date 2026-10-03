@@ -2,26 +2,28 @@ import Link from 'next/link';
 
 export default function NotFound() {
   return (
-    <div className="bg-paper px-4 py-16">
-      <div className="rule-double mx-auto max-w-[1080px] pt-6">
-        <p className="font-mono text-[13px] text-muted">Kesalahan 404</p>
-        <h1 className="mt-2 font-display text-5xl font-extrabold text-ink">
+    <div className="bg-ink px-4 py-20">
+      <div className="wrap">
+        <p className="label text-blue">Error 404</p>
+        <p className="num mt-3 text-[clamp(90px,22vw,180px)] leading-none">404</p>
+        <div className="mt-3 h-px w-24 bg-blue" aria-hidden />
+        <h1 className="mt-6 font-display text-2xl font-extrabold md:text-3xl">
           Halaman tidak ditemukan
         </h1>
-        <p className="mt-3 max-w-[65ch] text-muted">
+        <p className="mt-3 max-w-[52ch] text-muted">
           Alamat yang Anda tuju tidak tersedia. Mungkin tautannya sudah berubah atau
           halamannya dihapus.
         </p>
-        <div className="mt-6 flex flex-wrap gap-3">
+        <div className="mt-8 flex flex-wrap gap-3">
           <Link
             href="/"
-            className="inline-flex h-12 items-center rounded-[4px] bg-blue px-5 font-display text-base font-bold uppercase text-white"
+            className="label inline-flex h-12 items-center rounded-full bg-blue px-6 text-ink"
           >
             Kembali ke jadwal
           </Link>
           <Link
             href="/klasemen"
-            className="inline-flex h-12 items-center rounded-[4px] border-[1.5px] border-ink px-5 font-display text-base font-bold uppercase text-ink"
+            className="label inline-flex h-12 items-center rounded-full border border-line px-6 text-text"
           >
             Lihat klasemen
           </Link>

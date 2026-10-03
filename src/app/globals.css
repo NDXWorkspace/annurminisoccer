@@ -1,146 +1,209 @@
 @import "tailwindcss";
 
 /* ==========================================================
-   An-Nur Mini Soccer — "Papan Pertandingan Lapangan" (DESIGN.md)
-   Terang: putih kapur 70% · biru 25% · kuning <= 5%.
-   Struktur dibangun dengan garis, bukan bayangan.
+   An-Nur Mini Soccer — layar VAR di pinggir lapangan
+   Hitam pekat · biru tuner · kuning peluit
+   Struktur dari garis, bukan bayangan.
    ========================================================== */
 
 @theme {
-  --color-ink: #0a1f44;
-  --color-blue: #1646b8;
-  --color-blue-tint: #e6eefb;
-  --color-paper: #f5f7fa;
-  --color-white: #ffffff;
-  --color-rule: #c9d3e3;
-  --color-muted: #51607a;
-  --color-whistle: #f5c400;
-  --color-alert: #b3261e;
+  --color-ink: #05070d;
+  --color-surface: #0a0e18;
+  --color-raise: #101729;
+  --color-line: #1c2740;
+  --color-text: #f4f7fc;
+  --color-muted: #8d9bb8;
+  --color-blue: #5b8dff;
+  --color-blue-dim: #2f4a99;
+  --color-yellow: #f5c400;
+  --color-danger: #ff5470;
 
-  /* Type */
-  --font-display: var(--font-big-shoulders), "Arial Narrow", ui-sans-serif, sans-serif;
-  --font-sans: var(--font-public-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+  --font-display: var(--font-bricolage), "Segoe UI", system-ui, sans-serif;
+  --font-sans: var(--font-public-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, Menlo, monospace;
+
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@property --a {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
 }
 
 @layer base {
   html {
+    background: var(--color-ink);
+    color-scheme: dark;
     -webkit-text-size-adjust: 100%;
+    scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 80px);
   }
 
   body {
-    background-color: var(--color-paper);
-    color: var(--color-ink);
+    margin: 0;
+    background: var(--color-ink);
+    color: var(--color-text);
     font-family: var(--font-sans);
     font-size: 16px;
     line-height: 1.5;
+    font-variant-numeric: tabular-nums;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
+    padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+  }
+
+  @media (min-width: 760px) {
+    body {
+      padding-bottom: 48px;
+    }
+  }
+
+  button {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: 0;
+    cursor: pointer;
   }
 
   h1,
   h2,
-  h3,
-  h4 {
+  h3 {
     font-family: var(--font-display);
+    letter-spacing: -0.03em;
     line-height: 1.05;
   }
 
   :focus-visible {
-    outline: 3px solid var(--color-whistle);
-    outline-offset: 2px;
+    outline: 3px solid var(--color-yellow);
+    outline-offset: 3px;
+    border-radius: 999px;
   }
 
   ::selection {
     background: var(--color-blue);
     color: #fff;
   }
-
-  /* Angka tidak bergeser saat berubah (skor, jam, klasemen) */
-  time,
-  .tnum,
-  .score-display {
-    font-variant-numeric: tabular-nums;
-  }
 }
 
 @layer utilities {
-  /* ---- Label kecil: uppercase + tracking, hanya untuk label ---- */
+  .wrap {
+    width: 100%;
+    max-width: 1080px;
+    margin-inline: auto;
+    padding-inline: 16px;
+  }
+
+  /* ---- Label kecil: uppercase, lebar, hanya untuk label ---- */
   .label {
-    font-size: 0.75rem;
-    font-weight: 700;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     line-height: 1.3;
   }
 
-  /* ---- Angka skor / jam: Big Shoulders, tabular ---- */
-  .score-display {
+  /* ---- Angka skor/jam: Bricolage, tabular, rapat ---- */
+  .num {
     font-family: var(--font-display);
     font-weight: 800;
     font-variant-numeric: tabular-nums;
-    line-height: 0.9;
-    letter-spacing: 0;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
   }
 
-  /* ---- Garis ganda di atas judul section (1px + jarak 3px + 1px) ---- */
-  .rule-double {
-    border-top: 1px solid var(--color-ink);
-    box-shadow: 0 -4px 0 -3px var(--color-ink);
+  /* ---- Judul section dengan garis memanjang ---- */
+  .rule-title {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .rule-title::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--color-line), transparent);
   }
 
-  /* ---- Bayangan satu-satunya yang diizinkan: bawah header menempel ---- */
-  .header-shadow {
-    box-shadow: 0 1px 0 rgb(10 31 68 / 0.08);
+  /* ---- Kontainer pil: header, nav, filter ---- */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--color-line);
+    border-radius: 999px;
+    background: var(--color-surface);
   }
 
-  /* ---- Titik LIVE: denyut pelan, maks 1 gerakan per 1,6 detik ---- */
-  @keyframes live-dot {
-    0%,
-    100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.35;
-    }
-  }
-  .animate-live-dot {
-    animation: live-dot 1.8s ease-in-out infinite;
+  /* ---- Permukaan panel ---- */
+  .panel {
+    border: 1px solid var(--color-line);
+    border-radius: 24px;
+    background: var(--color-surface);
   }
 
-  /* ---- Pergantian skor: angka baru masuk dari bawah, 160ms ---- */
-  @keyframes score-in {
-    from {
-      opacity: 0;
-      transform: translateY(0.35em);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  .animate-score-in {
-    animation: score-in 160ms ease-out;
+  /* ---- Latar garis lapangan (halus, tidak berulang) ---- */
+  .pitch-wash {
+    background-image:
+      linear-gradient(to right, rgba(91, 141, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(91, 141, 255, 0.05) 1px, transparent 1px);
+    background-size: 64px 64px;
   }
 
-  /* ---- Garis bawah kuning penanda skor berubah (1,2 detik) ---- */
-  @keyframes score-flash {
-    0%,
-    100% {
-      border-bottom-color: transparent;
-    }
-    15%,
-    85% {
-      border-bottom-color: var(--color-whistle);
-    }
+  /* ---- Penanda kategori: U10 garis, U12 terisi ---- */
+  .mark {
+    display: inline-flex;
+    align-items: center;
+    height: 24px;
+    padding-inline: 11px;
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
   }
-  .animate-score-flash {
-    border-bottom: 3px solid transparent;
-    animation: score-flash 1.2s ease-out;
+  .mark-outline {
+    border: 1px solid rgba(244, 247, 252, 0.55);
+  }
+  .mark-solid {
+    background: var(--color-text);
+    color: var(--color-ink);
   }
 
-  /* ---- Sembunyikan scrollbar untuk rel horizontal ---- */
+  /* ---- Monogram tim ---- */
+  .mono-badge {
+    display: grid;
+    place-items: center;
+    flex: none;
+    border: 1px solid var(--color-line);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.04);
+    font-family: var(--font-display);
+    font-weight: 800;
+    transition: background 0.25s, border-color 0.25s, color 0.25s;
+  }
+
+  /* ---- Skor: garis bawah kuning sesaat saat berubah ---- */
+  .flash {
+    position: relative;
+  }
+  .flash::after {
+    content: "";
+    position: absolute;
+    left: 14%;
+    right: 14%;
+    bottom: 2px;
+    height: 4px;
+    border-radius: 4px;
+    background: var(--color-yellow);
+    opacity: 0;
+  }
+  .flash-on::after {
+    animation: und 1.6s var(--ease-out) forwards;
+  }
+
+  /* ---- Scrollbars ---- */
   .scrollbar-hide {
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -149,19 +212,145 @@
     display: none;
   }
 
-  /* ---- Safe area untuk tab bawah ---- */
   .pb-safe {
-    padding-bottom: max(env(safe-area-inset-bottom), 84px);
+    padding-bottom: max(env(safe-area-inset-bottom), 88px);
   }
+}
+
+/* ==========================================================
+   Gerak — hanya untuk memberi tahu data berubah
+   ========================================================== */
+
+/* Titik denyut: 1 gerakan per 1,6 detik */
+@keyframes pulse-dot {
+  50% {
+    opacity: 0.25;
+    transform: scale(0.6);
+  }
+}
+.animate-pulse-dot {
+  animation: pulse-dot 1.6s ease-in-out infinite;
+}
+
+/* Angka naik dari bawah saat skor berubah */
+@keyframes tick {
+  from {
+    transform: translateY(80%);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.animate-tick {
+  display: block;
+  animation: tick 0.5s var(--ease-out);
+}
+
+/* Garis bawah kuning 1,6 detik */
+@keyframes und {
+  0%,
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Garis lapangan tergambar sendiri */
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.animate-draw {
+  stroke-dasharray: 1600;
+  stroke-dashoffset: 1600;
+  animation: draw 2.4s 0.2s var(--ease-out) forwards;
+}
+
+/* Ticker berjalan */
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.animate-marquee {
+  animation: marquee 40s linear infinite;
+}
+.rail-host:hover .animate-marquee {
+  animation-play-state: paused;
+}
+
+/* Bingkai LIVE berputar lambat */
+@keyframes spin {
+  to {
+    --a: 360deg;
+  }
+}
+.animate-spin-slow {
+  animation: spin 5s linear infinite;
+}
+
+/* Muncul berurutan */
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-enter {
+  animation: enter 0.7s var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 60ms);
+}
+
+/* Judul hero naik dari bawah pembungkus */
+@keyframes rise {
+  to {
+    transform: none;
+  }
+}
+.hero-line {
+  display: block;
+  overflow: hidden;
+  padding: 0.04em 0;
+}
+.hero-line b {
+  display: block;
+  font-weight: inherit;
+  transform: translateY(110%) rotate(3deg);
+  transform-origin: 0 100%;
+  animation: rise 1s var(--ease-out) forwards;
+}
+.hero-line:nth-child(2) b {
+  animation-delay: 0.14s;
+  -webkit-text-stroke: 1.5px var(--color-blue);
+  color: transparent;
 }
 
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
-    animation-duration: 0.001ms !important;
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
+    transition: none !important;
     scroll-behavior: auto !important;
+  }
+  .hero-line b {
+    transform: none;
+  }
+  .animate-draw {
+    stroke-dashoffset: 0;
+  }
+  .animate-marquee {
+    animation: none;
   }
 }

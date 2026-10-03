@@ -4,14 +4,24 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import type { ApiResponse, EventSettings, MatchWithTeams } from '@/lib/types';
 import { SEED_MATCHES, SEED_SETTINGS } from '@/lib/seed';
-import { formatShortDate, todayWIB } from '@/lib/utils';
+import { formatShortDate, formatTime, todayWIB } from '@/lib/utils';
 import { useCategory } from '@/hooks/useCategory';
 import MatchRow from '@/components/MatchRow';
 import CategoryMark from '@/components/CategoryMark';
 import StatusBadge from '@/components/StatusBadge';
+import Countdown from '@/components/Countdown';
+import PitchGraphic from '@/components/PitchGraphic';
 
 function stamp(date: Date): string {
   return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+}
+
+function dayLabel(dateStr: string): string {
+  const weekday = new Date(`${dateStr}T12:00:00`).toLocaleDateString('id-ID', {
+    weekday: 'long',
+  });
+  const short = formatShortDate(dateStr);
+  return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)}, ${short}`;
 }
 
 export default function BerandaPage() {
@@ -19,7 +29,7 @@ export default function BerandaPage() {
   const [settings, setSettings] = useState<EventSettings | null>(SEED_SETTINGS);
   const [updatedAt, setUpdatedAt] = useState<string>('');
   const [offline, setOffline] = useState(false);
-  const [category] = useCategory();
+  const [category, setCategory] = useCategory();
 
   useEffect(() => {
     let cancelled = false;
@@ -57,11 +67,6 @@ export default function BerandaPage() {
 
   const activeCategory = categories.includes(category) ? category : 'Semua';
 
-  const days = useMemo(
-    () => [...new Set(matches.map((m) => m.match_date))].sort(),
-    [matches]
-  );
-
   const byKickoff = (a: MatchWithTeams, b: MatchWithTeams) =>
     `${a.match_date}${a.kickoff_time}`.localeCompare(`${b.match_date}${b.kickoff_time}`);
 
@@ -75,156 +80,216 @@ export default function BerandaPage() {
     [matches, activeCategory]
   );
 
-  const dayMatches = useMemo(() => {
-    const today = todayWIB();
-    const pool = matches.filter((m) => m.match_date === today);
-    const list = (pool.length > 0 ? pool : matches)
+  const days = useMemo(() => [...new Set(matches.map((m) => m.match_date))].sort(), [matches]);
+
+  const [day, setDay] = useState('');
+  useEffect(() => {
+    if (!day && days.length > 0) {
+      const today = todayWIB();
+      setDay(days.includes(today) ? today : days[0]);
+    }
+  }, [days, day]);
+
+  const groups = useMemo(() => {
+    const list = matches
+      .filter((m) => (day ? m.match_date === day : true))
       .filter((m) => activeCategory === 'Semua' || m.category === activeCategory)
       .sort(byKickoff);
-    return list;
-  }, [matches, activeCategory]);
-
-  const preview = dayMatches.slice(0, 6);
-
-  const dateLabel = (() => {
-    const start = settings?.start_date || '2026-10-09';
-    const end = settings?.end_date || '2026-10-10';
-    if (start === end) return formatShortDate(start);
-    const [sy, sm] = start.split('-');
-    const [ey, em, ed] = end.split('-');
-    const sd = String(Number(start.split('-')[2]));
-    if (sy === ey && sm === em) {
-      const monthYear = formatShortDate(end).split(' ').slice(1).join(' ');
-      return `${sd}–${ed} ${monthYear}`;
+    const map = new Map<string, MatchWithTeams[]>();
+    for (const m of list) {
+      const key = m.kickoff_time;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(m);
     }
-    return `${formatShortDate(start)}–${formatShortDate(end)}`;
-  })();
-  const location = settings?.location || 'Lapangan An-Nur';
+    return [...map.entries()];
+  }, [matches, day, activeCategory]);
+
+  const start = settings?.start_date || '2026-10-09';
+  const end = settings?.end_date || '2026-10-10';
+  const [sy, sm] = start.split('-');
+  const [ey, em] = end.split('-');
+  const sameMonth = sy === ey && sm === em;
+  const dayEnd = Number(end.split('-')[2]);
+  const monthYear = formatShortDate(end).split(' ').slice(1).join(' ');
+  const topLine = sameMonth ? `${Number(start.split('-')[2])}–${dayEnd} ${monthYear.split(' ')[0].toUpperCase()}` : formatShortDate(start).toUpperCase();
 
   return (
     <>
       {/* ============ HERO papan skor ============ */}
-      <section className="relative overflow-hidden bg-ink text-white">
-        {/* Motif garis lapangan: setengah lingkaran + garis tengah, terpotong tepi */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full border-[1.5px] border-white/20"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -right-24 top-12 h-px w-72 bg-white/20"
-        />
-        <div className="relative mx-auto w-full max-w-[1080px] px-4 py-10">
-          <p className="font-mono text-[13px] text-white/70">
-            9–10 Oktober 2026 · {location}
-          </p>
-          <h1 className="mt-1 font-display text-[56px] font-extrabold leading-[0.95] md:text-[96px]">
-            {dateLabel}
+      <section className="relative -mt-[76px] overflow-hidden rounded-b-[44px] border-b border-line pb-7 pt-[150px]">
+        <PitchGraphic />
+        <div className="wrap relative z-10">
+          <h1 className="num text-[clamp(54px,15.5vw,132px)] leading-none">
+            <span className="hero-line">
+              <b>{topLine}</b>
+            </span>
+            <span className="hero-line">
+              <b>{sameMonth ? monthYear.split(' ')[1] : formatShortDate(start).split(' ')[1]}</b>
+            </span>
           </h1>
-          <p className="mt-3 max-w-[65ch] text-[15px] leading-relaxed text-white/80">
-            Turnamen mini soccer An-Nur. Jadwal dan skor diperbarui langsung oleh
-            panitia.
+          <p className="mt-4 max-w-[42ch] text-base leading-relaxed text-muted">
+            Turnamen mini soccer An-Nur. Jadwal dan skor diperbarui langsung oleh panitia.
           </p>
+          <Countdown target={`${start}T09:00:00+07:00`} />
           {updatedAt && (
-            <p className="mt-4 font-mono text-[13px] text-white/70">
-              Diperbarui {updatedAt}
-            </p>
+            <p className="label mt-4 text-muted/70">Diperbarui {updatedAt}</p>
           )}
         </div>
       </section>
 
       {offline && (
-        <div className="border-b border-rule bg-white">
-          <div className="mx-auto flex w-full max-w-[1080px] flex-wrap items-center justify-between gap-2 px-4 py-2">
-            <p className="text-sm text-muted">
-              Koneksi terputus. Menampilkan data terakhir
-              {updatedAt ? ` (${updatedAt})` : ''}.
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="h-11 rounded-[4px] border-[1.5px] border-ink px-4 font-display text-sm font-bold uppercase text-ink"
-            >
+        <div className="wrap pt-4">
+          <div className="flex items-center justify-between gap-3 rounded-full border border-line bg-surface px-5 py-2.5">
+            <p className="text-sm text-muted">Koneksi terputus. Menampilkan data terakhir.</p>
+            <Link href="/" className="label text-blue">
               Muat ulang
-            </button>
+            </Link>
           </div>
         </div>
       )}
 
-      <div className="mx-auto w-full max-w-[1080px] px-4 py-8">
-        {/* ============ SEDANG BERLANGSUNG (hanya jika ada) ============ */}
-        {live.length > 0 && (
-          <section aria-label="Sedang berlangsung" className="mb-10">
-            <div className="rule-double pt-3">
-              <h2 className="font-display text-[32px] font-extrabold leading-none text-ink md:text-[44px]">
-                Sedang berlangsung
-              </h2>
-            </div>
-            <div className="mt-4 grid gap-6 md:grid-cols-2">
-              {live.map((m) => (
-                <div key={m.id} className="border border-rule bg-white">
-                  <div className="flex items-center justify-between gap-2 border-b border-rule px-4 py-2">
-                    {m.category ? (
-                      <CategoryMark category={m.category} field={m.field} />
-                    ) : (
-                      <span className="font-mono text-xs text-muted">
-                        {m.field ? `Lapangan ${m.field}` : ''}
-                      </span>
-                    )}
-                    <StatusBadge status={m.status} />
-                  </div>
-                  <div className="flex items-center gap-3 px-4 py-4">
-                    <p className="min-w-0 flex-1 truncate font-display text-2xl font-bold text-ink">
-                      {m.team_a?.name ?? 'Tim A'}
-                    </p>
-                    <p
-                      className="score-display shrink-0 text-[96px] text-ink md:text-[144px]"
-                      aria-live="polite"
-                      aria-label={`${m.team_a?.name ?? 'Tim A'} ${m.score_a ?? 0}, ${m.team_b?.name ?? 'Tim B'} ${m.score_b ?? 0}`}
-                    >
-                      {m.score_a ?? 0}–{m.score_b ?? 0}
-                    </p>
-                    <p className="min-w-0 flex-1 truncate text-right font-display text-2xl font-bold text-ink">
-                      {m.team_b?.name ?? 'Tim B'}
-                    </p>
-                  </div>
+      {/* ============ SEDANG BERLANGSUNG ============ */}
+      {live.length > 0 && (
+        <section aria-label="Sedang berlangsung" className="pt-12">
+          <h2 className="rule-title font-display text-[30px] font-extrabold md:text-[46px]">
+            Sedang berlangsung
+          </h2>
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            {live.map((m, i) => (
+              <article
+                key={m.id}
+                style={{ ['--i' as string]: i }}
+                className="animate-enter relative isolate overflow-hidden rounded-[32px] bg-gradient-to-bl from-raise to-ink p-6 before:absolute before:inset-0 before:-z-10 before:rounded-[32px] before:p-[1.5px] before:bg-[conic-gradient(from_var(--a),transparent_0_60%,var(--color-yellow)_82%,transparent_100%)] before:[-webkit-mask:linear-gradient(#000_0_0)_content-box,linear-gradient(#000_0_0)] before:[mask-composite:exclude] before:[animation:spin_5s_linear_infinite]"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  {m.category ? (
+                    <CategoryMark category={m.category} field={m.field} />
+                  ) : (
+                    <span className="label text-muted">{m.field ? `Lapangan ${m.field}` : ''}</span>
+                  )}
+                  <StatusBadge status={m.status} />
                 </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* ============ JADWAL HARI INI (ringkas) ============ */}
-        <section aria-label="Jadwal hari ini">
-          <div className="rule-double flex flex-wrap items-end justify-between gap-3 pt-3">
-            <h2 className="font-display text-[32px] font-extrabold leading-none text-ink md:text-[44px]">
-              Hari ini
-            </h2>
-            <Link
-              href="/jadwal"
-              className="font-display text-base font-bold uppercase text-blue"
-            >
-              Jadwal lengkap
-            </Link>
-          </div>
-
-          <div className="mt-4 border-t border-rule">
-            {preview.length === 0 ? (
-              <p className="border-b border-rule bg-white px-4 py-8 text-muted">
-                Jadwal belum diumumkan.
-              </p>
-            ) : (
-              preview.map((m, i) => (
-                <MatchRow
-                  key={m.id}
-                  match={m}
-                  code={`M-${String(i + 1).padStart(2, '0')}`}
-                  showCategory={activeCategory === 'Semua'}
-                />
-              ))
-            )}
+                <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                  <p className="truncate font-display text-[19px] font-bold leading-tight">
+                    {m.team_a?.name ?? 'Tim A'}
+                  </p>
+                  <p
+                    className="num flash flash-on flex items-center gap-2 text-[clamp(64px,18vw,112px)] leading-none"
+                    aria-live="polite"
+                    aria-label={`${m.team_a?.name ?? 'Tim A'} ${m.score_a ?? 0}, ${m.team_b?.name ?? 'Tim B'} ${m.score_b ?? 0}`}
+                  >
+                    {m.score_a ?? 0}
+                    <span className="font-medium text-muted">–</span>
+                    {m.score_b ?? 0}
+                  </p>
+                  <p className="truncate text-right font-display text-[19px] font-bold leading-tight">
+                    {m.team_b?.name ?? 'Tim B'}
+                  </p>
+                </div>
+                <p className="label mt-4 text-muted">
+                  {m.match_date} · {formatTime(m.kickoff_time)}
+                </p>
+              </article>
+            ))}
           </div>
         </section>
-      </div>
+      )}
+
+      {/* ============ JADWAL ============ */}
+      <section aria-label="Jadwal pertandingan" className="pt-12">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="rule-title font-display text-[30px] font-extrabold md:text-[46px]">
+            Jadwal
+          </h2>
+          {categories.length > 0 && (
+            <CategoryFilter
+              categories={categories}
+              active={activeCategory}
+              onChange={setCategory}
+            />
+          )}
+        </div>
+
+        {days.length > 1 && (
+          <div role="tablist" aria-label="Hari" className="pill mt-4 gap-1 p-1.5">
+            {days.map((d) => (
+              <button
+                key={d}
+                role="tab"
+                aria-selected={day === d}
+                onClick={() => setDay(d)}
+                className={`label rounded-full px-4 py-2.5 transition-colors ${
+                  day === d
+                    ? 'bg-blue/20 text-text shadow-[inset_0_0_0_1px_rgba(91,141,255,.45)]'
+                    : 'text-muted'
+                }`}
+              >
+                {dayLabel(d)}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-4" aria-live="polite">
+          {groups.length === 0 ? (
+            <p className="py-6 text-muted">
+              {activeCategory === 'Semua'
+                ? 'Jadwal belum diumumkan.'
+                : `Jadwal ${activeCategory} belum diumumkan.`}
+            </p>
+          ) : (
+            groups.map(([time, list]) => (
+              <div key={time}>
+                {activeCategory === 'Semua' && list.length > 1 && (
+                  <div className="flex items-center gap-3.5 pb-3 pt-6">
+                    <span className="num text-[28px]">{formatTime(time)}</span>
+                    <span className="h-1.5 w-1.5 flex-none rounded-full bg-blue" aria-hidden />
+                    <span className="h-px flex-1 bg-gradient-to-r from-line to-transparent" aria-hidden />
+                  </div>
+                )}
+                {list.map((m, i) => (
+                  <MatchRow
+                    key={m.id}
+                    match={m}
+                    code={`M-${String(i + 1).padStart(2, '0')}`}
+                    showCategory={activeCategory === 'Semua'}
+                  />
+                ))}
+              </div>
+            ))
+          )}
+        </div>
+      </section>
     </>
+  );
+}
+
+/** Filter kategori: pil, pilihan aktif jadi latar terang. */
+function CategoryFilter({
+  categories,
+  active,
+  onChange,
+}: {
+  categories: string[];
+  active: string;
+  onChange: (c: string) => void;
+}) {
+  const options = ['Semua', ...categories];
+
+  return (
+    <div className="pill gap-0.5 p-1" role="group" aria-label="Kategori">
+      {options.map((c) => (
+        <button
+          key={c}
+          aria-pressed={active === c}
+          onClick={() => onChange(c)}
+          className={`label rounded-full px-5 py-2.5 transition-colors ${
+            active === c ? 'bg-text text-ink' : 'text-muted hover:text-text'
+          }`}
+        >
+          {c}
+        </button>
+      ))}
+    </div>
   );
 }

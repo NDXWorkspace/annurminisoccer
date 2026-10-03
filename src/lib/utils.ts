@@ -85,6 +85,19 @@ export function calculateAllStandings(
 }
 
 /**
+ * Label posisi pemain dalam Bahasa Indonesia.
+ */
+export function positionLabel(p: string | null | undefined): string {
+  switch (p) {
+    case 'GK': return 'Kiper';
+    case 'DF': return 'Belakang';
+    case 'MF': return 'Tengah';
+    case 'FW': return 'Depan';
+    default: return '–';
+  }
+}
+
+/**
  * Tanggal hari ini dalam zona WIB (Asia/Jakarta) sebagai YYYY-MM-DD.
  * Jangan pakai `new Date().toISOString().split('T')[0]` — itu UTC dan bisa
  * geser H-1/H+1 di sekitar tengah malam WIB.

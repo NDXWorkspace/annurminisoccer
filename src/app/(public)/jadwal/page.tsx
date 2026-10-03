@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ApiResponse, MatchWithTeams } from '@/lib/types';
 import { formatShortDate, formatTime } from '@/lib/utils';
 import { SEED_MATCHES } from '@/lib/seed';
@@ -17,8 +17,7 @@ function dayLabel(dateStr: string): string {
   const weekday = new Date(`${dateStr}T12:00:00`).toLocaleDateString('id-ID', {
     weekday: 'long',
   });
-  const short = formatShortDate(dateStr);
-  return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)}, ${short}`;
+  return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)}, ${formatShortDate(dateStr)}`;
 }
 
 export default function JadwalPage() {
@@ -28,7 +27,6 @@ export default function JadwalPage() {
   const [category, setCategory] = useCategory();
   const [date, setDate] = useState('');
   const [stage, setStage] = useState('all');
-  const [field, setField] = useState('all');
   const [query, setQuery] = useState('');
 
   useEffect(() => {
@@ -63,80 +61,73 @@ export default function JadwalPage() {
 
   const dates = useMemo(() => [...new Set(matches.map((m) => m.match_date))].sort(), [matches]);
   const stages = useMemo(() => [...new Set(matches.map((m) => m.stage))].sort(), [matches]);
-  const fields = useMemo(
-    () => [...new Set(matches.map((m) => m.field).filter(Boolean) as string[])].sort(),
-    [matches]
-  );
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return matches
-      .filter((m) => {
-        if (activeCategory !== 'Semua' && m.category !== activeCategory) return false;
-        if (date && m.match_date !== date) return false;
-        if (stage !== 'all' && m.stage !== stage && m.group_name !== stage) return false;
-        if (field !== 'all' && m.field !== field) return false;
-        if (q) {
-          const hit =
-            m.team_a?.name.toLowerCase().includes(q) ||
-            m.team_b?.name.toLowerCase().includes(q) ||
-            m.team_a?.short_name.toLowerCase().includes(q) ||
-            m.team_b?.short_name.toLowerCase().includes(q);
-          if (!hit) return false;
-        }
-        return true;
-      })
-      .sort((a, b) => `${a.match_date}${a.kickoff_time}`.localeCompare(`${b.match_date}${b.kickoff_time}`));
-  }, [matches, activeCategory, date, stage, field, query]);
 
   const groups = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const list = matches
+      .filter((m) => (activeCategory === 'Semua' ? true : m.category === activeCategory))
+      .filter((m) => (date ? m.match_date === date : true))
+      .filter((m) => (stage === 'all' ? true : m.stage === stage))
+      .filter((m) => {
+        if (!q) return true;
+        return (
+          m.team_a?.name.toLowerCase().includes(q) ||
+          m.team_b?.name.toLowerCase().includes(q) ||
+          m.team_a?.short_name.toLowerCase().includes(q) ||
+          m.team_b?.short_name.toLowerCase().includes(q)
+        );
+      })
+      .sort((a, b) =>
+        `${a.match_date}${a.kickoff_time}`.localeCompare(`${b.match_date}${b.kickoff_time}`)
+      );
     const map = new Map<string, MatchWithTeams[]>();
-    for (const m of filtered) {
+    for (const m of list) {
       const key = `${m.match_date} ${m.kickoff_time}`;
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(m);
     }
     return [...map.entries()];
-  }, [filtered]);
+  }, [matches, activeCategory, date, stage, query]);
 
-  const inputCls =
-    'h-[52px] w-full rounded-[2px] border-[1.5px] border-rule bg-white px-3 text-base text-ink outline-none focus:border-blue';
+  const select =
+    'h-12 rounded-full border border-line bg-surface px-4 text-base text-text outline-none transition-colors focus:border-blue';
 
   return (
-    <div className="mx-auto w-full max-w-[1080px] px-4 py-8">
-      <div className="rule-double pt-3">
-        <h1 className="font-display text-[32px] font-extrabold leading-none text-ink md:text-[44px]">
-          Jadwal pertandingan
+    <div className="wrap pt-12 pb-8">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="rule-title font-display text-[30px] font-extrabold md:text-[46px]">
+          Jadwal
         </h1>
+        {categories.length > 0 && (
+          <div className="pill gap-0.5 p-1" role="group" aria-label="Kategori">
+            {['Semua', ...categories].map((c) => (
+              <button
+                key={c}
+                aria-pressed={activeCategory === c}
+                onClick={() => setCategory(c)}
+                className={`label rounded-full px-5 py-2.5 transition-colors ${
+                  activeCategory === c ? 'bg-text text-ink' : 'text-muted hover:text-text'
+                }`}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {categories.length > 0 && (
-        <div role="group" aria-label="Kategori" className="mt-4 grid grid-cols-3 border border-rule bg-white">
-          {['Semua', ...categories].map((c) => (
-            <button
-              key={c}
-              onClick={() => setCategory(c)}
-              aria-pressed={activeCategory === c}
-              className={`h-12 font-display text-base font-bold uppercase ${
-                activeCategory === c ? 'bg-blue text-white' : 'text-ink'
-              }`}
-            >
-              {c}
-            </button>
-          ))}
-        </div>
-      )}
-
       {dates.length > 1 && (
-        <div role="tablist" aria-label="Hari" className="mt-4 flex gap-6 overflow-x-auto border-b border-rule">
+        <div role="tablist" aria-label="Hari" className="pill mt-5 gap-0.5 p-1">
           {dates.map((d) => (
             <button
               key={d}
               role="tab"
               aria-selected={date === d}
               onClick={() => setDate(d)}
-              className={`h-12 shrink-0 font-display text-base font-bold uppercase ${
-                date === d ? 'border-b-[3px] border-blue text-blue' : 'text-muted'
+              className={`label shrink-0 rounded-full px-4 py-2.5 transition-colors ${
+                date === d
+                  ? 'bg-blue/20 text-text shadow-[inset_0_0_0_1px_rgba(91,141,255,.45)]'
+                  : 'text-muted'
               }`}
             >
               {dayLabel(d)}
@@ -145,25 +136,29 @@ export default function JadwalPage() {
         </div>
       )}
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
         <div>
-          <label htmlFor="j-q" className="label block text-ink">Cari tim</label>
+          <label htmlFor="j-q" className="label mb-1.5 block text-muted">
+            Cari tim
+          </label>
           <input
             id="j-q"
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Nama tim"
-            className={`${inputCls} mt-1.5`}
+            placeholder="Nama atau singkatan"
+            className={`${select} w-full`}
           />
         </div>
         <div>
-          <label htmlFor="j-stage" className="label block text-ink">Fase</label>
+          <label htmlFor="j-stage" className="label mb-1.5 block text-muted">
+            Fase
+          </label>
           <select
             id="j-stage"
             value={stage}
             onChange={(e) => setStage(e.target.value)}
-            className={`${inputCls} mt-1.5`}
+            className={`${select} w-full`}
           >
             <option value="all">Semua fase</option>
             {stages.map((s) => (
@@ -173,45 +168,29 @@ export default function JadwalPage() {
             ))}
           </select>
         </div>
-        <div>
-          <label htmlFor="j-field" className="label block text-ink">Lapangan</label>
-          <select
-            id="j-field"
-            value={field}
-            onChange={(e) => setField(e.target.value)}
-            className={`${inputCls} mt-1.5`}
-          >
-            <option value="all">Semua lapangan</option>
-            {fields.map((f) => (
-              <option key={f} value={f}>
-                Lapangan {f}
-              </option>
-            ))}
-          </select>
-        </div>
       </div>
 
       {error && (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border border-alert bg-white px-4 py-3">
-          <p className="text-sm text-alert">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="h-11 rounded-[4px] border-[1.5px] border-ink px-4 font-display text-sm font-bold uppercase text-ink"
-          >
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-full border border-danger/40 bg-danger/10 px-5 py-3">
+          <p className="text-sm text-danger">{error}</p>
+          <button onClick={() => window.location.reload()} className="label text-text">
             Coba lagi
           </button>
         </div>
       )}
 
-      <div className="mt-4 border-t border-rule">
-        {loading && filtered.length === 0 ? (
-          <div className="border-b border-rule bg-white px-4 py-8">
-            <div className="h-8 w-1/2 bg-rule" />
-            <div className="mt-3 h-4 w-1/3 bg-rule" />
+      <div className="mt-6" aria-live="polite">
+        {loading && groups.length === 0 ? (
+          <div className="space-y-2.5">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="h-24 animate-pulse rounded-[26px] bg-raise" />
+            ))}
           </div>
         ) : groups.length === 0 ? (
-          <p className="border-b border-rule bg-white px-4 py-8 text-muted">
-            {activeCategory === 'Semua' ? 'Jadwal belum diumumkan.' : `Jadwal ${activeCategory} belum diumumkan.`}
+          <p className="py-6 text-muted">
+            {activeCategory === 'Semua'
+              ? 'Jadwal belum diumumkan.'
+              : `Jadwal ${activeCategory} belum diumumkan.`}
           </p>
         ) : (
           groups.map(([key, list]) => {
@@ -219,12 +198,15 @@ export default function JadwalPage() {
             return (
               <div key={key}>
                 {activeCategory === 'Semua' && list.length > 1 && (
-                  <p className="score-display border-b border-rule bg-white px-4 pt-4 text-3xl text-ink">
-                    {formatTime(t)}
-                    <span className="ml-3 align-middle font-mono text-xs font-medium text-muted">
-                      {dayLabel(d)}
-                    </span>
-                  </p>
+                  <div className="flex items-center gap-3.5 pb-3 pt-6">
+                    <span className="num text-[28px]">{formatTime(t)}</span>
+                    <span className="h-1.5 w-1.5 flex-none rounded-full bg-blue" aria-hidden />
+                    <span
+                      className="h-px flex-1 bg-gradient-to-r from-line to-transparent"
+                      aria-hidden
+                    />
+                    <span className="label text-muted">{dayLabel(d)}</span>
+                  </div>
                 )}
                 {list.map((m, i) => (
                   <MatchRow

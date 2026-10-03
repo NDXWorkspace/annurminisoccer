@@ -18,8 +18,8 @@ interface RailItem {
 }
 
 /**
- * Lajur pertandingan: kilas live, kickoff berikut, dan hasil terbaru.
- * Geser manual (scroll horizontal); tanpa gerak otomatis.
+ * Ticker hasil: apa yang sudah dimuatultimate, berjalan pelan di bawah header.
+ * Berhenti saat kursor mendekat supaya angka masih bisa dibaca.
  */
 export default function MatchdayRail() {
   const [matches, setMatches] = useState<MatchWithTeams[]>(SEED_MATCHES);
@@ -34,7 +34,7 @@ export default function MatchdayRail() {
         const data: ApiResponse<MatchWithTeams[]> = await res.json();
         if (!cancelled && data.success && data.data) setMatches(data.data);
       } catch {
-        // strip informatif; kegagalan poll membiarkan snapshot terakhir
+        // strip ini informatif; kegagalan poll membiarkan snapshot terakhir
       } finally {
         if (!cancelled) setLoaded(true);
       }
@@ -87,36 +87,41 @@ export default function MatchdayRail() {
 
   if (!loaded || items.length === 0) return null;
 
+  // Digandakan sekali supaya -50% berputar tanpa sambungan
+  const loop = [...items, ...items];
+
   return (
-    <div className="border-b border-rule bg-white">
-      <div className="scrollbar-hide flex items-center gap-6 overflow-x-auto px-4 py-2">
-        {items.map((item) => {
+    <div className="rail-host relative mt-3.5 overflow-hidden whitespace-nowrap rounded-full border border-line bg-white/[0.025] [mask-image:linear-gradient(90deg,transparent,#000_8%,#000_92%,transparent)]">
+      <div className="animate-marquee inline-flex">
+        {loop.map((item, idx) => {
           const isLive = item.status === 'live' || item.status === 'halftime';
           const hasScore = item.scoreA !== null && item.scoreB !== null;
           return (
             <Link
-              key={item.key}
+              key={`${item.key}-${idx}`}
               href="/live"
-              className="flex shrink-0 items-center gap-2 whitespace-nowrap"
+              className="inline-flex items-center gap-2 px-5 py-3"
             >
               <span
-                className={`label ${item.status === 'live' ? 'text-alert' : item.status === 'finished' ? 'text-muted' : 'text-blue'}`}
+                className={`label ${isLive ? 'text-yellow' : 'text-muted'}`}
               >
                 {isLive && (
-                  <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-alert animate-live-dot" aria-hidden />
+                  <span
+                    className="mr-1.5 inline-block h-[7px] w-[7px] rounded-full bg-yellow animate-pulse-dot align-middle"
+                    aria-hidden
+                  />
                 )}
                 {item.label}
               </span>
-              <span className="font-display text-sm font-bold text-ink">
-                {item.a} lawan {item.b}
+              <span className="text-sm font-semibold text-muted">
+                {item.a}
+                <span className="num mx-1.5 text-base text-text">
+                  {hasScore ? `${item.scoreA}–${item.scoreB}` : formatTime(item.meta.split('·').pop()?.trim() ?? '00:00')}
+                </span>
+                {item.b}
               </span>
-              <span className="score-display text-sm text-ink">
-                {hasScore
-                  ? `${item.scoreA}–${item.scoreB}`
-                  : formatTime(item.meta.split('·').pop()?.trim() ?? '00:00')}
-              </span>
-              <span className="font-mono text-xs text-muted">{item.meta}</span>
-              <span className="h-3 w-px bg-rule" aria-hidden />
+              <span className="label text-muted/70">{item.meta}</span>
+              <span className="h-3 w-px bg-line" aria-hidden />
             </Link>
           );
         })}

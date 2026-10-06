@@ -207,3 +207,18 @@ export function getCountdown(targetDate: string): {
     isPast: false,
   };
 }
+
+/**
+ * Validasi logo tim: URL penuh (https://…) atau path relatif dari akar situs
+ * (/teams/…). Yang kedua dipakai untuk logo yang ikut ter-deploy di folder
+ * `public`, jadi tidak bergantung pada domain tertentu.
+ */
+export function isValidLogoUrl(value: string): boolean {
+  if (value.startsWith('/') && !value.startsWith('//')) return true;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}

@@ -11,20 +11,39 @@ function textOn(hex: string): string {
 }
 
 /**
- * Monogram tim pengganti logo.
- * Lingkaran 40px, garis tipis, berisi singkatan 2–3 huruf.
+ * Monogram tim.
+ * Logo asli bila tim punya `logo_url`; kalau tidak, lingkaran berisi
+ * singkatan 2–3 huruf. Ukuran, bentuk, dan animasi hover sama untuk keduanya
+ * supaya baris jadwal tidak "meloncat" saat sebagian tim sudah punya logo.
  */
 export default function Monogram({
   name,
   shortName,
   color,
+  logo,
   size = 40,
 }: {
   name: string;
   shortName?: string | null;
   color?: string | null;
+  logo?: string | null;
   size?: number;
 }) {
+  const src = logo?.trim() || null;
+
+  if (src) {
+    return (
+      <span
+        aria-hidden
+        className="mono-badge mono-badge--logo"
+        style={{ width: size, height: size }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element -- logo boleh URL mana pun */}
+        <img src={src} alt="" loading="lazy" decoding="async" />
+      </span>
+    );
+  }
+
   const initials = (shortName?.trim() || getInitials(name)).toUpperCase().slice(0, 3);
   const bg = color?.trim() || '#FFFFFF';
 

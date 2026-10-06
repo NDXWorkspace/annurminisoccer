@@ -36,7 +36,7 @@ export default function MatchCard({
             {match.team_a?.name ?? 'Tim A'}
           </span>
         </Link>
-        <Monogram name={match.team_a?.name ?? 'A'} shortName={match.team_a?.short_name} size={compact ? 32 : 40} />
+        <Monogram name={match.team_a?.name ?? 'A'} shortName={match.team_a?.short_name} logo={match.team_a?.logo_url} size={compact ? 32 : 40} />
         {showScore ? (
           <ScorePair
             a={match.score_a ?? 0}
@@ -47,7 +47,7 @@ export default function MatchCard({
         ) : (
           <p className="num text-xl text-muted">vs</p>
         )}
-        <Monogram name={match.team_b?.name ?? 'B'} shortName={match.team_b?.short_name} size={compact ? 32 : 40} />
+        <Monogram name={match.team_b?.name ?? 'B'} shortName={match.team_b?.short_name} logo={match.team_b?.logo_url} size={compact ? 32 : 40} />
         <Link href={`/tim/${match.team_b_id}`} className="min-w-0 flex-1">
           <span
             className={`block truncate font-display leading-tight ${

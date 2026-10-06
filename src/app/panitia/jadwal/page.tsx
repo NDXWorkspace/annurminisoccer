@@ -315,6 +315,7 @@ export default function JadwalPanitia() {
                     className={`${input} mt-1.5`}
                   >
                     <option value="grup">Grup</option>
+                    <option value="perempat-final">8 Besar</option>
                     <option value="semifinal">Semifinal</option>
                     <option value="final">Final</option>
                   </select>

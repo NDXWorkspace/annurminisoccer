@@ -1,7 +1,7 @@
 // === Database Types ===
 
 export type MatchStatus = 'scheduled' | 'live' | 'halftime' | 'finished';
-export type MatchStage = 'grup' | 'semifinal' | 'final';
+export type MatchStage = 'grup' | 'perempat-final' | 'semifinal' | 'final';
 
 export interface Team {
   id: string;

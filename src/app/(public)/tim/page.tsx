@@ -58,6 +58,7 @@ export default function TimPage() {
                       name={team.name}
                       shortName={team.short_name}
                       color={team.color}
+                      logo={team.logo_url}
                       size={56}
                     />
                     <span className="font-display text-[19px] font-bold leading-tight group-hover:text-blue">

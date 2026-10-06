@@ -10,6 +10,7 @@ import Reveal from '@/components/Reveal';
 
 const STAGE_LABEL: Record<string, string> = {
   grup: 'Grup',
+  'perempat-final': '8 Besar',
   semifinal: 'Semifinal',
   final: 'Final',
 };

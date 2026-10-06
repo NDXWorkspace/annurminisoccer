@@ -226,6 +226,32 @@ export default function TimPanitia() {
                   <span className="label text-muted">{formData.color}</span>
                 </div>
               </div>
+              <div>
+                <label htmlFor="t-logo" className="label block text-muted">
+                  Logo tim
+                </label>
+                <div className="mt-1.5 flex items-center gap-3">
+                  <input
+                    id="t-logo"
+                    type="text"
+                    placeholder="/teams/nama-tim.jpg"
+                    value={formData.logo_url}
+                    onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
+                    className={`${input} min-w-0 flex-1`}
+                  />
+                  <Monogram
+                    name={formData.name || 'Tim'}
+                    shortName={formData.short_name}
+                    color={formData.color}
+                    logo={formData.logo_url}
+                    size={44}
+                  />
+                </div>
+                <p className="label mt-1.5 text-muted">
+                  Path dari folder public (/teams/…) atau URL https://… — kosongkan untuk memakai
+                  singkatan.
+                </p>
+              </div>
               <div className="flex gap-3 pt-1">
                 <button
                   type="button"
@@ -273,7 +299,7 @@ export default function TimPanitia() {
                 <tr key={team.id} className="border-b border-line last:border-0">
                   <td className="px-5 py-3">
                     <span className="flex items-center gap-3">
-                      <Monogram name={team.name} shortName={team.short_name} color={team.color} size={36} />
+                      <Monogram name={team.name} shortName={team.short_name} color={team.color} logo={team.logo_url} size={36} />
                       <span>
                         <span className="block font-bold">{team.name}</span>
                         <span className="label text-muted">{team.short_name}</span>

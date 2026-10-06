@@ -164,7 +164,7 @@ export default function SkorTab() {
               } disabled:opacity-40`}
             >
               <span className="label text-muted">
-                Lapangan {s.field} · {s.category}
+                Lapangan {s.field} · {m?.category ?? s.category}
               </span>
               {m ? (
                 <>
@@ -206,7 +206,7 @@ export default function SkorTab() {
                     on ? 'bg-blue text-ink' : 'text-muted'
                   }`}
                 >
-                  L{s.field} · {s.category}
+                  L{s.field} · {m?.category ?? s.category}
                 </button>
               );
             })}

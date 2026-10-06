@@ -200,6 +200,18 @@
       color 0.3s,
       border-color 0.3s;
   }
+  /* Logo asli: menutup penuh lingkaran. Sumbernya sudah persegi dan latarnya
+     rata, jadi `cover` tidak memotong isi — hanya sudut lingkaran. */
+  .mono-badge--logo {
+    overflow: hidden;
+    background: #fff;
+  }
+  .mono-badge--logo img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
   /* Monogram berputar saat disentuh — penanda tim yang sedang dibaca. */
   .group:hover .mono-badge,
   .row:hover .mono-badge {

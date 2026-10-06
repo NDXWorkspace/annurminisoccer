@@ -22,13 +22,36 @@ describe('sinkronisasi antar halaman', () => {
     const teams = SEED_TEAMS;
 
     // Beranda/Baris cocok dengan klasemen untuk pertandingan yang sama.
+    // Seed resmi berisi jadwal yang belum dimainkan, jadi uji hitungnya
+    // memakai satu laga selesai buatan dari dua tim seed pertama.
     const finished = matches.filter((m) => m.status === 'finished');
-    expect(finished.length).toBeGreaterThan(0);
+    const group = teams[0]?.group_name ?? 'A';
+    const pair = teams.filter((t) => t.group_name === group).slice(0, 2);
+    const probe: MatchWithTeams[] =
+      finished.length > 0
+        ? finished
+        : [
+            {
+              ...matches[0],
+              team_a_id: pair[0].id,
+              team_b_id: pair[1].id,
+              team_a: pair[0],
+              team_b: pair[1],
+              score_a: 2,
+              score_b: 1,
+              status: 'finished',
+              group_name: group,
+            },
+          ];
+    expect(probe.length).toBeGreaterThan(0);
+    const pool = finished.length > 0 ? matches : [...matches, ...probe];
 
-    for (const m of finished) {
-      const rows = calculateStandings(teams, matches, 'A');
+    for (const m of probe) {
+      const rows = calculateStandings(teams, pool, m.group_name ?? group);
       const rowA = rows.find((r) => r.team.id === m.team_a_id)!;
       const rowB = rows.find((r) => r.team.id === m.team_b_id)!;
+      expect(rowA).toBeDefined();
+      expect(rowB).toBeDefined();
 
       // Poin harus naik sesuai hasil: menang 3, seri 1, kalah 0.
       const expectedA = m.score_a > m.score_b ? 3 : m.score_a === m.score_b ? 1 : 0;

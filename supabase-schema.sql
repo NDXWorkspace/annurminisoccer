@@ -24,7 +24,7 @@ CREATE TABLE matches (
   match_date DATE NOT NULL,
   kickoff_time TIME NOT NULL,
   field VARCHAR(50) NOT NULL,
-  stage VARCHAR(20) DEFAULT 'grup' CHECK (stage IN ('grup', 'semifinal', 'final')),
+  stage VARCHAR(20) DEFAULT 'grup' CHECK (stage IN ('grup', 'perempat-final', 'semifinal', 'final')),
   group_name VARCHAR(10),
   updated_at TIMESTAMPTZ DEFAULT now()
 );

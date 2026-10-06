@@ -3,6 +3,7 @@ import { supabase, getServiceSupabase, isSupabaseConfigured, isServiceRoleConfig
 import { getSession } from '@/lib/auth';
 import { audit } from '@/lib/admin-users';
 import { parseJsonBody } from '@/lib/http';
+import { isValidLogoUrl } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -88,19 +89,13 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     }
     if (body?.logo_url !== undefined) {
       const v = typeof body.logo_url === 'string' ? body.logo_url.trim() : '';
-      if (v) {
-        try {
-          const parsed = new URL(v);
-          if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-            return NextResponse.json({ success: false, error: 'URL logo harus diawali http:// atau https://' }, { status: 400 });
-          }
-        } catch {
-          return NextResponse.json({ success: false, error: 'URL logo tidak valid.' }, { status: 400 });
-        }
-        update.logo_url = v;
-      } else {
-        update.logo_url = null;
+      if (v && !isValidLogoUrl(v)) {
+        return NextResponse.json(
+          { success: false, error: 'URL logo tidak valid. Gunakan https://… atau path /teams/…' },
+          { status: 400 }
+        );
       }
+      update.logo_url = v || null;
     }
     if (body?.color !== undefined) {
       const v = typeof body.color === 'string' ? body.color.trim() : '';

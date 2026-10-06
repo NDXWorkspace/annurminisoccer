@@ -67,7 +67,7 @@ export default function MatchRow({
         <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
           <div className={`flex items-center gap-3 ${toneA}`}>
             <Link href={`/tim/${match.team_a_id}`} className="min-w-0">
-              <Monogram name={a?.name ?? 'Tim A'} shortName={a?.short_name} color={a?.color} />
+              <Monogram name={a?.name ?? 'Tim A'} shortName={a?.short_name} color={a?.color} logo={a?.logo_url} />
             </Link>
             <Link
               href={`/tim/${match.team_a_id}`}
@@ -89,7 +89,7 @@ export default function MatchRow({
 
           <div className={`flex flex-row-reverse items-center gap-3 text-right ${toneB}`}>
             <Link href={`/tim/${match.team_b_id}`} className="min-w-0">
-              <Monogram name={b?.name ?? 'Tim B'} shortName={b?.short_name} color={b?.color} />
+              <Monogram name={b?.name ?? 'Tim B'} shortName={b?.short_name} color={b?.color} logo={b?.logo_url} />
             </Link>
             <Link
               href={`/tim/${match.team_b_id}`}

@@ -10,6 +10,7 @@ import {
 import { getSession } from '@/lib/auth';
 import { parseJsonBody } from '@/lib/http';
 import { audit } from '@/lib/admin-users';
+import { isValidLogoUrl } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -76,15 +77,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Singkatan (short_name) harus 3 karakter' }, { status: 400 });
     }
 
-    if (logo_url) {
-      try {
-        const parsed = new URL(logo_url);
-        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-          return NextResponse.json({ success: false, error: 'URL logo harus diawali http:// atau https://' }, { status: 400 });
-        }
-      } catch {
-        return NextResponse.json({ success: false, error: 'URL logo tidak valid.' }, { status: 400 });
-      }
+    if (logo_url && !isValidLogoUrl(logo_url)) {
+      return NextResponse.json(
+        { success: false, error: 'URL logo tidak valid. Gunakan https://… atau path /teams/…' },
+        { status: 400 }
+      );
     }
 
     if (color && !/^#[0-9a-fA-F]{6}$/.test(color)) {

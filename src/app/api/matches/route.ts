@@ -10,6 +10,7 @@ import {
 import { getSession } from '@/lib/auth';
 import { audit } from '@/lib/admin-users';
 import { parseJsonBody } from '@/lib/http';
+import { advanceBracket } from '@/lib/bracket-runner';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -18,7 +19,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^\d{2}:\d{2}(:\d{2})?$/;
 const STATUSES = ['scheduled', 'live', 'halftime', 'finished'] as const;
-const STAGES = ['grup', 'semifinal', 'final'] as const;
+const STAGES = ['grup', 'perempat-final', 'semifinal', 'final'] as const;
 
 export async function GET(request: Request) {
   if (!isSupabaseConfigured()) {
@@ -79,6 +80,20 @@ export async function GET(request: Request) {
       }
     } catch {
       // Abaikan: auto-start tidak boleh merusak respons baca.
+    }
+
+    // Braket gugur otomatis: tiap grup penyisihan yang tuntas → juara dan
+    // runner-up-nya dipasangkan ke 8 besar; pemenang 8 besar → semifinal;
+    // pemenang semifinal → final + perebutan juara 3. Berjalan di jalur
+    // polling yang sama (tiap GET), best-effort, dan idempoten: slot yang
+    // sudah ada tidak pernah dibuat ulang atau ditulis ulang — koreksi skor
+    // grup setelah slot terbentuk harus dibetulkan manual lewat /panitia.
+    try {
+      if (isServiceRoleConfigured()) {
+        await advanceBracket(getServiceSupabase());
+      }
+    } catch {
+      // Abaikan: kegagalan braket tidak boleh merusak respons baca.
     }
 
     const { data, error } = await query;

@@ -11,7 +11,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^\d{2}:\d{2}(:\d{2})?$/;
 const STATUSES = ['scheduled', 'live', 'halftime', 'finished'] as const;
-const STAGES = ['grup', 'semifinal', 'final'] as const;
+const STAGES = ['grup', 'perempat-final', 'semifinal', 'final'] as const;
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!isSupabaseConfigured()) {

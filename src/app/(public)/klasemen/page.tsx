@@ -17,7 +17,7 @@ export default function KlasemenPage() {
   // Klasemen dihitung dari store yang sama dengan halaman lain, jadi
   // angka Poin di sini dijamin cocok dengan skor di Beranda dan Jadwal.
   const [teams] = useResource(teamsStore);
-  const [matches, online, reload] = useResource(matchesStore);
+  const [matches, online, reload, loaded] = useResource(matchesStore);
   const [category, setCategory] = useCategory('U10');
 
   const categories = useMemo(() => {
@@ -178,7 +178,7 @@ export default function KlasemenPage() {
           </section>
         ))}
 
-        {visible.length === 0 && online && (
+        {visible.length === 0 && loaded && (
           <p className="py-8 text-muted">
             Klasemen muncul setelah pertandingan pertama selesai.
           </p>

@@ -24,7 +24,7 @@ function dayLabel(dateStr: string): string {
 export default function BerandaPage() {
   // Beranda, ticker, jadwal, dan live semua membaca store yang sama,
   // jadi angka di empat tempat itu dijamin identik.
-  const [matches, online, reloadMatches] = useResource(matchesStore);
+  const [matches, online, reloadMatches, loaded] = useResource(matchesStore);
   const [settings] = useResource(settingsStore);
   const [updatedAt, setUpdatedAt] = useState('');
   const [category, setCategory] = useCategory();
@@ -131,7 +131,9 @@ export default function BerandaPage() {
       )}
 
       {/* ============ SEDANG BERLANGSUNG ============ */}
-      {live.length > 0 && (
+      {/* Tanpa syarat `loaded`, kartu LIVE dari data seed akan sempat tampil
+          sebagai pertandingan yang sedang jalan. */}
+      {loaded && live.length > 0 && (
         <section aria-label="Sedang berlangsung" className="pt-12">
           <Reveal as="h2" className="rule-title font-display text-[30px] font-extrabold md:text-[46px]">Sedang berlangsung</Reveal>
           <div className="mt-5 grid gap-4 md:grid-cols-2">
@@ -176,7 +178,16 @@ export default function BerandaPage() {
         )}
 
         <div className="mt-4" aria-live="polite">
-          {groups.length === 0 ? (
+          {!loaded ? (
+            <div className="space-y-3 py-2" aria-hidden>
+              {[0, 1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="animate-skeleton h-[74px] rounded-2xl border border-line bg-raise/60"
+                />
+              ))}
+            </div>
+          ) : groups.length === 0 ? (
             <p className="py-6 text-muted">
               {activeCategory === 'Semua'
                 ? 'Jadwal belum diumumkan.'

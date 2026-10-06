@@ -18,7 +18,7 @@ const EMPTY: TeamFormData = {
 export default function TimPanitia() {
   //. Store yang sama dengan halaman Tim publik: ubah tim di sini, daftar
   // publik ikut berubah seketika.
-  const [teams, online, reload] = useResource(teamsStore);
+  const [teams, online, reload, loaded] = useResource(teamsStore);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingTeam, setDeletingTeam] = useState<Team | null>(null);
@@ -26,7 +26,7 @@ export default function TimPanitia() {
   const [formData, setFormData] = useState<TeamFormData>(EMPTY);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const isLoading = teams.length === 0 && !online;
+  const isLoading = !loaded;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

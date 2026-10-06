@@ -17,7 +17,7 @@ const fieldFor = (category: string) => (category === 'U12' ? '2' : '1');
 export default function JadwalPanitia() {
   // Sebelumnya halaman ini hanya memuat SEKALI saat dibuka. Kalaucommittee
   // mengubah jadwal dari perangkat lain, daftar di sini tidak pernah bergerak.
-  const [allMatches, online, reload] = useResource(matchesStore);
+  const [allMatches, online, reload, loaded] = useResource(matchesStore);
   const [teams] = useResource(teamsStore);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -45,7 +45,7 @@ export default function JadwalPanitia() {
     [allMatches]
   );
 
-  const isLoading = allMatches.length === 0 && !online;
+  const isLoading = !loaded;
 
   const categoryTeams = teams.filter((t) => (t.category ?? 'U10') === formData.category);
 

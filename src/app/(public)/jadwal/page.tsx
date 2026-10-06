@@ -22,7 +22,7 @@ function dayLabel(dateStr: string): string {
 }
 
 export default function JadwalPage() {
-  const [matches, online, reload] = useResource(matchesStore);
+  const [matches, online, reload, loaded] = useResource(matchesStore);
   const [category, setCategory] = useCategory();
   const [date, setDate] = useState('');
   const [stage, setStage] = useState('all');
@@ -34,7 +34,7 @@ export default function JadwalPage() {
     if (first) setDate((d) => d || first);
   }, [matches]);
 
-  const loading = matches.length === 0 && !online;
+  const loading = !loaded;
 
   const categories = useMemo(() => {
     const cats = [...new Set(matches.map((m) => m.category).filter(Boolean))] as string[];

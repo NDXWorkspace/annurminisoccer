@@ -7,7 +7,7 @@ import Reveal from '@/components/Reveal';
 import { teamsStore, useResource } from '@/lib/live-store';
 
 export default function TimPage() {
-  const [allTeams, online, reload] = useResource(teamsStore);
+  const [allTeams, online, reload, loaded] = useResource(teamsStore);
 
   const teams = useMemo(
     () => [...allTeams].sort((a, b) => a.name.localeCompare(b.name)),
@@ -73,7 +73,7 @@ export default function TimPage() {
           </section>
         ))}
 
-        {teams.length === 0 && online && (
+        {teams.length === 0 && loaded && (
           <p className="py-8 text-muted">Belum ada tim yang terdaftar.</p>
         )}
       </div>

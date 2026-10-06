@@ -16,9 +16,9 @@ const DEFAULT_RULES = [
 
 export default function InfoPage() {
   // Pengaturan juga lewat store, jadi ubah dicommittee langsung tampil di sini.
-  const [settings, online] = useResource(settingsStore);
+  const [settings, online, , loaded] = useResource(settingsStore);
 
-  if (!settings && !online) {
+  if (!loaded) {
     return (
       <div className="wrap pt-12">
         <div className="h-10 w-2/3 rounded-full bg-raise" />

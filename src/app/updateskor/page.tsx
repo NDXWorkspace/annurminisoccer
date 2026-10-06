@@ -10,12 +10,12 @@ import { announceChangeEverywhere, matchesStore, useResource } from '@/lib/live-
 export default function UpdateSkorPage() {
   // Papan wasit memakai store yang sama dengan halaman publik, jadi skor
   // yang diketik di sini muncul seketika di semua tab.
-  const [matches, online, reload] = useResource(matchesStore);
+  const [matches, online, reload, loaded] = useResource(matchesStore);
   const [selectedField, setSelectedField] = useState<string>('all');
   const [lastUpdated, setLastUpdated] = useState('');
   const [saving, setSaving] = useState<string | null>(null);
 
-  const loading = matches.length === 0 && !online;
+  const loading = !loaded;
 
   useEffect(() => {
     if (!online) return;

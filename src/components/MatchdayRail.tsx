@@ -22,7 +22,7 @@ interface RailItem {
  * tidak mungkin menampilkan skor berbeda dari jadwal di detik yang sama.
  */
 export default function MatchdayRail() {
-  const [matches] = useResource(matchesStore);
+  const [matches, , , loaded] = useResource(matchesStore);
 
   const items = useMemo<RailItem[]>(() => {
     if (matches.length === 0) return [];
@@ -62,7 +62,9 @@ export default function MatchdayRail() {
     ];
   }, [matches]);
 
-  if (items.length === 0) return null;
+  // Seed hanya berplaceholder untuk render pertama; tidak pernah ditampilkan
+  // sebagai hasil yang sedang berlangsung.
+  if (!loaded || items.length === 0) return null;
 
   // Digandakan sekali supaya -50% berputar tanpa sambungan
   const loop = [...items, ...items];

@@ -9,7 +9,7 @@ import { matchesStore, useResource } from '@/lib/live-store';
 
 export default function LivePage() {
   // Store yang sama dengan beranda, jadwal, dan ticker — satu angka untuk semua.
-  const [matches, online, reload] = useResource(matchesStore);
+  const [matches, online, reload, loaded] = useResource(matchesStore);
   const [lastUpdated, setLastUpdated] = useState('');
 
   useEffect(() => {
@@ -17,7 +17,7 @@ export default function LivePage() {
     setLastUpdated(new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }));
   }, [matches, online]);
 
-  const loading = matches.length === 0 && !online;
+  const loading = !loaded;
 
   const live = matches.filter((m) => m.status === 'live' || m.status === 'halftime');
   const done = matches

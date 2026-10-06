@@ -28,7 +28,7 @@ interface UndoState {
 export default function SkorTab() {
   // Committee membaca store yang sama dengan halaman publik.Skor yang diinput
   //langsung terlihat di semua tab tanpa menunggu polling.
-  const [matches, online, reload] = useResource(matchesStore);
+  const [matches, online, reload, loaded] = useResource(matchesStore);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filter, setFilter] = useState('Semua');
   const [saveState, setSaveState] = useState<{ kind: 'idle' | 'saving' | 'saved' | 'error'; time: string }>({
@@ -39,7 +39,7 @@ export default function SkorTab() {
   const [lastChange, setLastChange] = useState<string>('');
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const isLoading = matches.length === 0 && !online;
+  const isLoading = !loaded;
 
   const slotMatch = (field: string): MatchWithTeams | undefined => {
     const inField = matches.filter((m) => m.field === field);

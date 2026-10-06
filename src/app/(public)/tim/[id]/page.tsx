@@ -14,7 +14,7 @@ export default function TeamDetailPage() {
 
   // Sama seperti halaman lain: satu store, satu salinan data.
   const [allTeams] = useResource(teamsStore);
-  const [allMatches, online] = useResource(matchesStore);
+  const [allMatches, online, , loaded] = useResource(matchesStore);
   const [players] = usePlayers(id);
 
   const team = useMemo(() => allTeams.find((t) => t.id === id) ?? null, [allTeams, id]);
@@ -29,7 +29,7 @@ export default function TeamDetailPage() {
     [allMatches, id]
   );
 
-  if (!online && !team) {
+  if (!loaded) {
     return (
       <div className="wrap pt-12">
         <div className="h-10 w-2/3 rounded-full bg-raise" />

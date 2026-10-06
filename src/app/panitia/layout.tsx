@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import RealtimeBadge from '@/components/RealtimeBadge';
 
 const TABS = [
   { name: 'Skor', path: '/panitia' },
@@ -108,6 +109,7 @@ export default function PanitiaLayout({ children }: { children: React.ReactNode 
             Panitia
           </Link>
           <div className="flex items-center gap-3">
+            <RealtimeBadge className="hidden sm:inline-flex" />
             {currentUser && (
               <span className="label text-muted">
                 {currentUser.username} · {currentUser.role}

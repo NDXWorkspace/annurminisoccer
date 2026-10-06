@@ -2,6 +2,7 @@ import Link from 'next/link';
 import BottomNav from '@/components/BottomNav';
 import MatchdayRail from '@/components/MatchdayRail';
 import ScrollProgress from '@/components/ScrollProgress';
+import RealtimeBadge from '@/components/RealtimeBadge';
 
 const NAV = [
   { name: 'Jadwal', path: '/' },
@@ -47,10 +48,13 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
 
       <footer className="wrap py-9 text-sm text-muted">
         <div className="border-t border-line pt-6">
-          <p className="max-w-[65ch]">
-            Skor diinput manual oleh panitia. Jika ada selisih, keputusan panitia yang
-            berlaku.
-          </p>
+          <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+            <p className="max-w-[65ch]">
+              Skor diinput manual oleh panitia. Jika ada selisih, keputusan panitia yang
+              berlaku.
+            </p>
+            <RealtimeBadge />
+          </div>
           <nav aria-label="Tautan lain" className="mt-3 flex flex-wrap gap-x-5 gap-y-1">
             <Link href="/jadwal" className="hover:text-blue">
               Jadwal lengkap

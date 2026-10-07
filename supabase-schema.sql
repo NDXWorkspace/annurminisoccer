@@ -10,6 +10,7 @@ CREATE TABLE teams (
   logo_url TEXT,
   group_name VARCHAR(10) NOT NULL,
   color VARCHAR(7),
+  category VARCHAR(3) CHECK (category IN ('U10', 'U12')),
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -26,7 +27,21 @@ CREATE TABLE matches (
   field VARCHAR(50) NOT NULL,
   stage VARCHAR(20) DEFAULT 'grup' CHECK (stage IN ('grup', 'perempat-final', 'semifinal', 'final')),
   group_name VARCHAR(10),
+  category VARCHAR(3) CHECK (category IN ('U10', 'U12')),
   updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Match events: kartu kuning/merah + kejadian lapangan lain yang dicatat
+-- lewat /updateskor (pelanggaran, penalti, cedera, catatan bebas).
+CREATE TABLE match_events (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  match_id UUID NOT NULL REFERENCES matches(id) ON DELETE CASCADE,
+  team_id UUID REFERENCES teams(id) ON DELETE SET NULL,
+  event_type TEXT NOT NULL CHECK (event_type IN ('kartu_kuning', 'kartu_merah', 'pelanggaran', 'penalti', 'cedera', 'lainnya')),
+  player_name TEXT,
+  minute INT CHECK (minute >= 0 AND minute <= 120),
+  note TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
 );
 
 -- Event settings table (single row)
@@ -52,21 +67,29 @@ CREATE INDEX idx_matches_date ON matches(match_date);
 CREATE INDEX idx_matches_team_a ON matches(team_a_id);
 CREATE INDEX idx_matches_team_b ON matches(team_b_id);
 CREATE INDEX idx_teams_group ON teams(group_name);
+CREATE INDEX idx_match_events_match ON match_events(match_id);
 
 -- Enable Row Level Security
 ALTER TABLE teams ENABLE ROW LEVEL SECURITY;
 ALTER TABLE matches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE event_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE match_events ENABLE ROW LEVEL SECURITY;
 
 -- Public read policies
 CREATE POLICY "Public can read teams" ON teams FOR SELECT USING (true);
 CREATE POLICY "Public can read matches" ON matches FOR SELECT USING (true);
 CREATE POLICY "Public can read event_settings" ON event_settings FOR SELECT USING (true);
+CREATE POLICY "Public can read match_events" ON match_events FOR SELECT USING (true);
 
 -- Service role can do everything (used by admin API routes)
 CREATE POLICY "Service role full access teams" ON teams FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Service role full access matches" ON matches FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Service role full access event_settings" ON event_settings FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Service role full access match_events" ON match_events FOR ALL USING (true) WITH CHECK (true);
+
+-- Realtime: match_events ikut siaran supaya kartu muncul di semua layar
+-- seketika (matches, teams, event_settings, players sudah lebih dulu).
+ALTER PUBLICATION supabase_realtime ADD TABLE match_events;
 
 -- Auto-update updated_at on matches
 CREATE OR REPLACE FUNCTION update_updated_at()

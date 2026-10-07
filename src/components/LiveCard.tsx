@@ -7,6 +7,7 @@ import CategoryMark from './CategoryMark';
 import StatusBadge from './StatusBadge';
 import ScorePair from './ScoreValue';
 import Reveal from './Reveal';
+import EventChips from './EventChips';
 
 /**
  * Kartu pertandingan LIVE. Dipakai beranda dan /live — satu sumber supaya
@@ -73,6 +74,10 @@ export default function LiveCard({ match, index = 0 }: { match: MatchWithTeams; 
         <p className="truncate text-right font-display text-[19px] font-bold leading-tight">
           {match.team_b?.name ?? 'Tim B'}
         </p>
+      </div>
+
+      <div className="relative">
+        <EventChips match={match} />
       </div>
 
       <p className="label relative mt-4 text-muted">

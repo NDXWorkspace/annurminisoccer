@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import type { MatchWithTeams } from '@/lib/types';
 import MatchRow from '@/components/MatchRow';
 import EmptyState from '@/components/EmptyState';
+import EventPanel, { type EventDraft } from '@/components/EventPanel';
 import { announceChangeEverywhere, matchesStore, useResource } from '@/lib/live-store';
 
 /** Papan skor lapangan: satu layar untuk wasit di dua lapangan. */
@@ -62,6 +63,45 @@ export default function UpdateSkorPage() {
       if (!ok) return;
     }
     update(m, { status });
+  };
+
+  /** Catat kejadian (kartu, pelanggaran, catatan). Mengembalikan null bila sukses. */
+  const addEvent = async (m: MatchWithTeams, draft: EventDraft): Promise<string | null> => {
+    try {
+      setSaving(m.id);
+      const res = await fetch('/api/updateskor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ match_id: m.id, ...draft }),
+      });
+      const payload = (await res.json().catch(() => null)) as
+        | { success?: boolean; error?: string }
+        | null;
+      if (!res.ok || !payload?.success) return payload?.error ?? 'Gagal menyimpan catatan.';
+      await matchesStore.refresh();
+      announceChangeEverywhere();
+      return null;
+    } catch {
+      return 'Koneksi terputus. Coba lagi.';
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  /** Koreksi salah catat: hapus lalu segarkan semua layar. */
+  const removeEvent = (eventId: string) => {
+    void (async () => {
+      try {
+        const res = await fetch(`/api/updateskor?event_id=${encodeURIComponent(eventId)}`, {
+          method: 'DELETE',
+        });
+        if (!res.ok) return;
+        await matchesStore.refresh();
+        announceChangeEverywhere();
+      } catch {
+        // Koneksi putus: chip tetap terbiar, bisa dicoba lagi.
+      }
+    })();
   };
 
   return (
@@ -190,6 +230,12 @@ export default function UpdateSkorPage() {
                     </>
                   )}
                 </div>
+                <EventPanel
+                  match={m}
+                  disabled={saving === m.id}
+                  onAdd={(draft) => addEvent(m, draft)}
+                  onRemove={removeEvent}
+                />
               </div>
             ))}
           </div>

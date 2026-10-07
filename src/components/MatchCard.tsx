@@ -3,6 +3,7 @@ import { formatTime } from '@/lib/utils';
 import Monogram from './Monogram';
 import StatusBadge from './StatusBadge';
 import ScorePair from './ScoreValue';
+import EventChips from './EventChips';
 import Link from 'next/link';
 
 /** Kartu ringkas untuk daftar hasil terbaru. */
@@ -58,6 +59,8 @@ export default function MatchCard({
           </span>
         </Link>
       </div>
+
+      <EventChips match={match} />
     </article>
   );
 }

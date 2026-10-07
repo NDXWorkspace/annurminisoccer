@@ -38,9 +38,13 @@ export async function GET(request: Request) {
 
     let query = supabase
       .from('matches')
-      .select('*, team_a:teams!team_a_id(*), team_b:teams!team_b_id(*)')
+      .select(
+        '*, team_a:teams!team_a_id(*), team_b:teams!team_b_id(*), ' +
+          'events:match_events(id, event_type, team_id, player_name, minute, note, created_at)'
+      )
       .order('match_date')
-      .order('kickoff_time');
+      .order('kickoff_time')
+      .order('created_at', { referencedTable: 'match_events' });
 
     if (status) {
       query = query.eq('status', status);

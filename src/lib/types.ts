@@ -32,9 +32,31 @@ export interface Match {
   category?: string | null;
 }
 
+/** Jenis kejadian pertandingan yang bisa dicatat lewat /updateskor. */
+export type MatchEventType =
+  | 'kartu_kuning'
+  | 'kartu_merah'
+  | 'pelanggaran'
+  | 'penalti'
+  | 'cedera'
+  | 'lainnya';
+
+export interface MatchEvent {
+  id: string;
+  match_id: string;
+  team_id: string | null;
+  event_type: MatchEventType;
+  player_name: string | null;
+  minute: number | null;
+  note: string | null;
+  created_at: string;
+}
+
 export interface MatchWithTeams extends Match {
   team_a: Team;
   team_b: Team;
+  /** Kejadian pertandingan (kartu, pelanggaran, catatan). Diisi GET /api/matches. */
+  events?: MatchEvent[];
 }
 
 export type PlayerPosition = 'GK' | 'DF' | 'MF' | 'FW';

@@ -240,6 +240,9 @@ const WIRE: Record<string, (payload: ChangePayload) => void> = {
   },
   teams: () => teamsStore.refreshSoon(),
   event_settings: () => settingsStore.refreshSoon(),
+  // Kejadian (kartu, pelanggaran) selalu ikut memuat ulang daftar pertandingan:
+  // embedded events datang bersama row matches.
+  match_events: () => matchesStore.refreshSoon(),
   players: () => {
     for (const fn of playerListeners) fn();
   },

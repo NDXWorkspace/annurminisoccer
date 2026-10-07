@@ -6,6 +6,7 @@ import ScorePair from './ScoreValue';
 import Reveal from './Reveal';
 import CategoryMark from './CategoryMark';
 import StatusBadge from './StatusBadge';
+import EventChips from './EventChips';
 
 /**
  * Baris pertandingan: satu blok penuh, bukan kartu-kartu kecil.
@@ -99,6 +100,8 @@ export default function MatchRow({
             </Link>
           </div>
         </div>
+
+        <EventChips match={match} />
       </div>
     </Reveal>
   );

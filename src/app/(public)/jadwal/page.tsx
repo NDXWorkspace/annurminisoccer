@@ -46,6 +46,25 @@ export default function JadwalPage() {
   const dates = useMemo(() => [...new Set(matches.map((m) => m.match_date))].sort(), [matches]);
   const stages = useMemo(() => [...new Set(matches.map((m) => m.stage))].sort(), [matches]);
 
+  /** Hari main tiap kategori, diturunkan dari data — untuk petunjuk saat tab kosong. */
+  const categoryDays = useMemo(() => {
+    const map: Record<string, string[]> = {};
+    for (const m of matches) {
+      if (!m.category) continue;
+      const list = (map[m.category] ??= []);
+      if (!list.includes(m.match_date)) list.push(m.match_date);
+    }
+    for (const key of Object.keys(map)) map[key].sort();
+    return map;
+  }, [matches]);
+
+  const categoryHint = useMemo(() => {
+    if (activeCategory === 'Semua' || query.trim() || stage !== 'all') return '';
+    const days = categoryDays[activeCategory];
+    if (!days || days.length === 0) return '';
+    return `${activeCategory} bermain ${days.map(dayLabel).join(' · ')}`;
+  }, [activeCategory, categoryDays, query, stage]);
+
   const groups = useMemo(() => {
     const q = query.trim().toLowerCase();
     const list = matches
@@ -171,11 +190,14 @@ export default function JadwalPage() {
             ))}
           </div>
         ) : groups.length === 0 ? (
-          <p className="py-6 text-muted">
-            {activeCategory === 'Semua'
-              ? 'Jadwal belum diumumkan.'
-              : `Jadwal ${activeCategory} belum diumumkan.`}
-          </p>
+          <div className="py-6">
+            <p className="text-muted">
+              {activeCategory === 'Semua'
+                ? 'Jadwal belum diumumkan.'
+                : `Tidak ada jadwal ${activeCategory} pada hari yang dipilih.`}
+            </p>
+            {categoryHint && <p className="label mt-2 text-muted">{categoryHint}</p>}
+          </div>
         ) : (
           groups.map(([key, list]) => {
             const [d, t] = key.split(' ');

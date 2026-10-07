@@ -6,12 +6,14 @@ import { formatShortDate, formatTime, todayWIB } from '@/lib/utils';
 import type { MatchWithTeams } from '@/lib/types';
 import { useCategory } from '@/hooks/useCategory';
 import { matchesStore, settingsStore, useResource } from '@/lib/live-store';
+import { rulesOf } from '@/lib/rules';
 import MatchRow from '@/components/MatchRow';
 import LiveCard from '@/components/LiveCard';
 import HeroSpotlight from '@/components/HeroSpotlight';
 import Reveal from '@/components/Reveal';
 import Countdown from '@/components/Countdown';
 import PitchGraphic from '@/components/PitchGraphic';
+import RulesPopup from '@/components/RulesPopup';
 
 function dayLabel(dateStr: string): string {
   const weekday = new Date(`${dateStr}T12:00:00`).toLocaleDateString('id-ID', {
@@ -25,7 +27,7 @@ export default function BerandaPage() {
   // Beranda, ticker, jadwal, dan live semua membaca store yang sama,
   // jadi angka di empat tempat itu dijamin identik.
   const [matches, online, reloadMatches, loaded] = useResource(matchesStore);
-  const [settings] = useResource(settingsStore);
+  const [settings, , , settingsLoaded] = useResource(settingsStore);
   const [updatedAt, setUpdatedAt] = useState('');
   const [category, setCategory] = useCategory();
 
@@ -216,6 +218,9 @@ export default function BerandaPage() {
           )}
         </div>
       </section>
+
+      {/* Client baru: peraturan turnamen sekali tampil, lalu disimpan. */}
+      {settingsLoaded && <RulesPopup rules={rulesOf(settings)} />}
     </>
   );
 }

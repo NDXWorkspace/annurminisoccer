@@ -4,15 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { formatDate } from '@/lib/utils';
 import { settingsStore, useResource } from '@/lib/live-store';
+import { rulesOf } from '@/lib/rules';
 import Reveal from '@/components/Reveal';
-
-const DEFAULT_RULES = [
-  'Sistem pertandingan menggunakan babak penyisihan grup dilanjutkan fase gugur (semifinal dan final).',
-  'Waktu pertandingan adalah 2 x 15 menit kotor dengan jeda istirahat 5 menit.',
-  'Jumlah pemain di lapangan 7 lawan 7 termasuk penjaga gawang.',
-  'Pergantian pemain bebas tanpa batasan.',
-  'Tim yang tidak hadir setelah pemanggilan 3 kali dengan jeda 5 menit dinyatakan kalah WO (3-0).',
-];
 
 export default function InfoPage() {
   // Pengaturan juga lewat store, jadi ubah dicommittee langsung tampil di sini.
@@ -47,9 +40,7 @@ export default function InfoPage() {
     },
   ];
 
-  const rules = settings?.rules_text
-    ? settings.rules_text.split('\n').filter((l) => l.trim().length > 0)
-    : DEFAULT_RULES;
+  const rules = rulesOf(settings);
 
   return (
     <div className="wrap pt-12 pb-8">

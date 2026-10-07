@@ -522,6 +522,26 @@
   color: transparent;
 }
 
+/* 9b. Latar kabut popup — sekali jalan, saat kunjungan pertama. */
+.rules-bd {
+  opacity: 0;
+  animation: fade var(--dur-base) var(--ease-out) forwards;
+}
+/* 9c. Lembar peraturan naik dari tepi bawah — sekali jalan, kunjungan pertama. */
+@keyframes sheet {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rules-sheet {
+  animation: sheet var(--dur-slow) var(--ease-out) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -538,6 +558,8 @@
   /* Konten yang punya animasi masuk harus tampil utuh saat gerak dimatikan. */
   .fade-sub,
   .fade-cd,
+  .rules-bd,
+  .rules-sheet,
   .rv {
     opacity: 1;
     transform: none;
